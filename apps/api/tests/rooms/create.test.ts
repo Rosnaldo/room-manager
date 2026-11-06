@@ -37,7 +37,7 @@ describe('POST /rooms/create', () => {
     roomFactory.create(ctx.db, { name: 'Sala Azul' });
 
     const res = await ctx.api.post('/rooms/create').send(createRoomBodyFactory.build({ name: 'SALA AZUL' })).expect(409);
-    expect(errorResponseSchema.parse(res.body).message).toMatch(/already exists/);
+    expect(errorResponseSchema.parse(res.body).message).toMatch(/Já existe uma sala chamada/);
   });
 
   it.each([
@@ -60,12 +60,12 @@ describe('POST /rooms/create', () => {
 
     const res = await ctx.api.post('/rooms/create').send(body).expect(400);
     const error = errorResponseSchema.parse(res.body);
-    expect(error.message).toBe('invalid request body');
+    expect(error.message).toBe('Dados inválidos.');
     expect(error.details).toHaveProperty(field);
   });
 
   it('rejects query params', async () => {
     const res = await ctx.api.post('/rooms/create?x=1').send(createRoomBodyFactory.build()).expect(400);
-    expect(errorResponseSchema.parse(res.body).message).toBe('invalid query params');
+    expect(errorResponseSchema.parse(res.body).message).toBe('Parâmetros de consulta inválidos.');
   });
 });

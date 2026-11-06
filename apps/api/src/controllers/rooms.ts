@@ -42,7 +42,7 @@ export interface RoomsController {
 export function createRoomsController(rooms: RoomRepository): RoomsController {
   return {
     create: (req, res) => {
-      if (rooms.findByName(req.body.name)) throw new ConflictException(`room ${req.body.name} already exists`);
+      if (rooms.findByName(req.body.name)) throw new ConflictException('room {name} already exists', { name: req.body.name });
       res.status(201).json(rooms.create(req.body));
     },
 

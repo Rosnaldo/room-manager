@@ -29,7 +29,7 @@ describe('POST /users/create', () => {
   it('returns 409 when the email is taken', async () => {
     const existing = userFactory.create(ctx.db);
     const res = await ctx.api.post('/users/create').send(createUserBodyFactory.build({ email: existing.email })).expect(409);
-    expect(errorResponseSchema.parse(res.body).message).toMatch(/already in use/);
+    expect(errorResponseSchema.parse(res.body).message).toMatch(/já está em uso/);
   });
 
   it.each([
@@ -43,17 +43,17 @@ describe('POST /users/create', () => {
 
     const res = await ctx.api.post('/users/create').send(body).expect(400);
     const error = errorResponseSchema.parse(res.body);
-    expect(error.message).toBe('invalid request body');
+    expect(error.message).toBe('Dados inválidos.');
     expect(error.details).toHaveProperty(field);
   });
 
   it('rejects unknown fields such as id', async () => {
     const res = await ctx.api.post('/users/create').send({ ...createUserBodyFactory.build(), id: 99 }).expect(400);
-    expect(errorResponseSchema.parse(res.body).details?._errors?.[0]).toMatch(/Unrecognized key/);
+    expect(errorResponseSchema.parse(res.body).details?._errors?.[0]).toMatch(/Campo não permitido/);
   });
 
   it('rejects query params', async () => {
     const res = await ctx.api.post('/users/create?foo=bar').send(createUserBodyFactory.build()).expect(400);
-    expect(errorResponseSchema.parse(res.body)).toMatchObject({ message: 'invalid query params', details: { foo: expect.any(Array) } });
+    expect(errorResponseSchema.parse(res.body)).toMatchObject({ message: 'Parâmetros de consulta inválidos.', details: { foo: expect.any(Array) } });
   });
 });

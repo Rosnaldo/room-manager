@@ -1,7 +1,8 @@
-export class ConflictException extends Error {
-  status = 409;
+import type { MessageParams } from '../i18n';
+import { HttpException } from './http';
 
-  constructor(message: string) {
-    super(message);
+export class ConflictException extends HttpException {
+  constructor(template: string, params?: MessageParams) {
+    super(409, template, params);
   }
 }

@@ -21,7 +21,7 @@ describe('DELETE /users/delete/:id', () => {
 
   it('returns 404 for a missing user', async () => {
     const res = await ctx.api.delete('/users/delete/999').expect(404);
-    expect(errorResponseSchema.parse(res.body)).toEqual({ message: 'user 999 not found' });
+    expect(errorResponseSchema.parse(res.body)).toEqual({ message: 'Usuário 999 não encontrado.' });
   });
 
   it('returns 400 for an invalid id', async () => {
