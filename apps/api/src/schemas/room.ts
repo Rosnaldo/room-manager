@@ -40,8 +40,8 @@ const resourcesFilter = z
 
 export const listRoomsQuerySchema = paginationQuerySchema
   .extend({
-    /** rooms holding at least this many people */
-    minCapacity: z.coerce.number().int().min(1).max(10_000).optional(),
+    /** rooms whose maxCapacity is at least this many people */
+    capacity: z.coerce.number().int().min(1).max(10_000).optional(),
     /** rooms having every listed resource */
     resources: resourcesFilter.optional(),
   });

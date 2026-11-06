@@ -11,15 +11,15 @@ function toRoom(row: RoomRow): IRoom {
 export interface ListRoomsOptions {
   page: number;
   size: number;
-  /** rooms holding at least this many people */
-  minCapacity?: number;
+  /** rooms whose maxCapacity is at least this many people */
+  capacity?: number;
   /** rooms having every one of these resource tags */
   resources?: string[];
 }
 
 function listFilter(opts: ListRoomsOptions): SQL | undefined {
   return and(
-    opts.minCapacity !== undefined ? gte(rooms.maxCapacity, opts.minCapacity) : undefined,
+    opts.capacity !== undefined ? gte(rooms.maxCapacity, opts.capacity) : undefined,
     ...(opts.resources ?? []).map(
       (tag) => sql`exists (select 1 from json_each(${rooms.resources}) where json_each.value = ${tag})`,
     ),

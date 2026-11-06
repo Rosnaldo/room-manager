@@ -32,7 +32,7 @@ describe('GET /rooms/list', () => {
   it('coerces and defaults query params', () => {
     expect(listRoomsQuerySchema.parse({})).toEqual({ page: 1, size: 20 });
     expect(listRoomsQuerySchema.parse({ page: '2', size: '10' })).toEqual({ page: 2, size: 10 });
-    expect(listRoomsQuerySchema.parse({ minCapacity: '8' })).toMatchObject({ minCapacity: 8 });
+    expect(listRoomsQuerySchema.parse({ capacity: '8' })).toMatchObject({ capacity: 8 });
   });
 
   it('accepts resources comma-separated, repeated or both, normalized', () => {
@@ -50,7 +50,7 @@ describe('GET /rooms/list', () => {
 
     it('by minimum capacity (inclusive)', async () => {
       const { medium, large } = seedRooms();
-      const page = await list('minCapacity=10');
+      const page = await list('capacity=10');
       expect(page.data).toEqual([medium, large]);
       expect(page.pagination.totalRecords).toBe(2);
     });
@@ -73,8 +73,8 @@ describe('GET /rooms/list', () => {
 
     it('combines capacity and resources, and paginates the filtered set', async () => {
       const { large } = seedRooms();
-      expect((await list('minCapacity=5&resources=projector&size=1&page=2')).data).toEqual([large]);
-      expect((await list('minCapacity=5&resources=projector&size=1')).pagination).toEqual({
+      expect((await list('capacity=5&resources=projector&size=1&page=2')).data).toEqual([large]);
+      expect((await list('capacity=5&resources=projector&size=1')).pagination).toEqual({
         currentPage: 1,
         totalPages: 2,
         totalRecords: 2,
@@ -84,7 +84,7 @@ describe('GET /rooms/list', () => {
 
     it('returns an empty page when nothing matches', async () => {
       seedRooms();
-      const page = await list('minCapacity=100');
+      const page = await list('capacity=100');
       expect(page.data).toEqual([]);
       expect(page.pagination.totalRecords).toBe(0);
     });
@@ -99,9 +99,9 @@ describe('GET /rooms/list', () => {
     ['page=0', 'page'],
     ['size=101', 'size'],
     ['size=abc', 'size'],
-    ['minCapacity=0', 'minCapacity'],
-    ['minCapacity=abc', 'minCapacity'],
-    ['minCapacity=2.5', 'minCapacity'],
+    ['capacity=0', 'capacity'],
+    ['capacity=abc', 'capacity'],
+    ['capacity=2.5', 'capacity'],
     [`resources=${'x'.repeat(51)}`, 'resources'],
   ])('returns 400 for %s', async (qs, field) => {
     const res = await ctx.api.get(`/rooms/list?${qs}`).expect(400);

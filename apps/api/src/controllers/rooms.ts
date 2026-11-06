@@ -16,7 +16,7 @@ export interface CreateRoomBody {
 export interface ListRoomsQuery {
   page: number;
   size: number;
-  minCapacity?: number;
+  capacity?: number;
   resources?: string[];
 }
 

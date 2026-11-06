@@ -7,7 +7,7 @@ import { requireUser } from '@/lib/session';
 type SearchParams = Record<string, string | string[] | undefined>;
 
 interface RoomFilters {
-  minCapacity?: number;
+  capacity?: number;
   resources: string[];
   page: number;
 }
@@ -29,7 +29,7 @@ function parseFilters(params: SearchParams): RoomFilters {
     .filter(Boolean);
 
   return {
-    minCapacity: positiveInt(first(params.minCapacity)),
+    capacity: positiveInt(first(params.capacity)),
     resources: [...new Set(resources)],
     page: positiveInt(first(params.page)) ?? 1,
   };
@@ -38,7 +38,7 @@ function parseFilters(params: SearchParams): RoomFilters {
 /** Same filters as a query string, so pagination links keep them. */
 function toQueryString(filters: RoomFilters): string {
   const qs = new URLSearchParams();
-  if (filters.minCapacity) qs.set('minCapacity', String(filters.minCapacity));
+  if (filters.capacity) qs.set('capacity', String(filters.capacity));
   if (filters.resources.length) qs.set('resources', filters.resources.join(','));
   if (filters.page > 1) qs.set('page', String(filters.page));
   const s = qs.toString();
@@ -54,14 +54,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       query: {
         page: filters.page,
         size: PAGE_SIZE,
-        minCapacity: filters.minCapacity,
+        capacity: filters.capacity,
         resources: filters.resources.length ? filters.resources.join(',') : undefined,
       },
     }),
     api<{ data: string[] }>('/rooms/resources'),
   ]);
 
-  const hasFilters = filters.minCapacity !== undefined || filters.resources.length > 0;
+  const hasFilters = filters.capacity !== undefined || filters.resources.length > 0;
 
   return (
     <section>
@@ -71,12 +71,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* a plain GET form: submitting writes the filters to the URL */}
       <form method="get" className="mt-6 flex flex-wrap items-end gap-6 rounded border border-neutral-200 p-4 dark:border-neutral-800">
         <label className="flex flex-col gap-1 text-sm">
-          Capacidade mínima
+          Capacidade (pessoas)
           <input
             type="number"
-            name="minCapacity"
+            name="capacity"
             min={1}
-            defaultValue={filters.minCapacity}
+            defaultValue={filters.capacity}
             placeholder="Qualquer"
             className="w-32 rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
           />
