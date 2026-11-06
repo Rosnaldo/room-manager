@@ -1,0 +1,1 @@
+ALTER TABLE `rooms` ADD `max_duration` text DEFAULT '04:00' NOT NULL;

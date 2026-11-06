@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-06
+
+### Added
+
+- **SALA-6** — Each room has its own maximum reservation duration.
+  - Rooms have a `maxDuration` (`HH:mm`, from `00:15` to `23:59`), required on
+    create; existing rooms get `04:00` (migration 0004).
+  - A reservation can't last longer than its room's `maxDuration`; the 15-minute
+    minimum still applies to every room.
+  - `PATCH /rooms/edit/:id` refuses (409) to lower `maxDuration` below a
+    reservation of that room that hasn't ended yet.
+  - Web: room cards and the booking form show each room's limit; the room form
+    edits it; admins get a "Nova sala" button and a `/salas/nova` page (404 for
+    anyone else).
+
+### Changed
+
+- The fixed 4-hour reservation limit is replaced by each room's `maxDuration`.
+
 ## [1.0.1] - 2026-11-06
 
 ### Fixed
@@ -47,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GET /rooms/resources` lists the resource tags in use.
   - Web: home page lists rooms, with filters kept in the URL.
 
-[Unreleased]: https://github.com/Rosnaldo/room-manager/compare/v1.0.1...develop
+[Unreleased]: https://github.com/Rosnaldo/room-manager/compare/v1.1.0...develop
+[1.1.0]: https://github.com/Rosnaldo/room-manager/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/Rosnaldo/room-manager/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Rosnaldo/room-manager/releases/tag/v1.0.0

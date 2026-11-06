@@ -23,6 +23,9 @@ export const pt: Record<string, string> = {
   // rooms
   'room {id} not found': 'Sala {id} não encontrada.',
   'room {name} already exists': 'Já existe uma sala chamada {name}.',
+  'cannot lower the maximum duration to {max}: {count} upcoming reservation(s) last longer':
+    'Não é possível reduzir a duração máxima para {max}: {count} reserva(s) futura(s) duram mais que isso. Cancele-as ou escolha uma duração maior.',
+  'must be a duration in the format HH:mm, from 00:15 to 23:59': 'Use uma duração no formato HH:mm, de 00:15 a 23:59.',
 
   // reservations
   'reservation {id} not found': 'Reserva {id} não encontrada.',
@@ -30,7 +33,7 @@ export const pt: Record<string, string> = {
   'must be a valid date-time in the format YYYY-MM-DDTHH:mm:ss': 'Data e hora inválidas. Use o formato AAAA-MM-DDTHH:mm:ss.',
   'must be after startAt': 'O fim deve ser depois do início.',
   'reservation must last at least 15 minutes': 'A reserva deve durar pelo menos 15 minutos.',
-  'reservation must last at most 4 hours': 'A reserva deve durar no máximo 4 horas.',
+  'reservation must last at most {max} in this room': 'A reserva nesta sala deve durar no máximo {max}.',
   'reservations are only allowed on weekdays (Monday to Friday)': 'Reservas só podem ser feitas em dias úteis (segunda a sexta).',
   'reservations must be between 08:00 and 20:00': 'Reservas só podem acontecer das 08:00 às 20:00.',
   'must not be in the past': 'O início não pode estar no passado.',

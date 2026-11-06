@@ -5,7 +5,7 @@ import type { DB } from '../db/connection';
 import { rooms, type NewRoomRow, type RoomRow } from '../db/schema';
 
 function toRoom(row: RoomRow): IRoom {
-  return { id: row.id, name: row.name, maxCapacity: row.maxCapacity, resources: row.resources };
+  return { id: row.id, name: row.name, maxCapacity: row.maxCapacity, maxDuration: row.maxDuration, resources: row.resources };
 }
 
 export interface ListRoomsOptions {

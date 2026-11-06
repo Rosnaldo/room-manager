@@ -5,7 +5,6 @@ import { endsWithinHours, isWeekday, startsWithinHours } from '../lib/business_h
 import { idParamsSchema, paginationQuerySchema, paginationSchema } from './common';
 
 export const MIN_RESERVATION_MINUTES = 15;
-export const MAX_RESERVATION_MINUTES = 4 * 60;
 
 const id = z.number().int().positive();
 
@@ -17,8 +16,9 @@ export const localDateTimeSchema = z
 // ---- input ----
 
 /**
- * Shape, duration and business-hours rules (weekdays, 08:00–20:00). "Not in the past" and
- * "no overlap" need the clock and the database, so the controller checks those.
+ * Shape, minimum-duration and business-hours rules (weekdays, 08:00–20:00). The room's maximum
+ * duration, "not in the past" and "no overlap" need the database or the clock, so the controller
+ * checks those.
  */
 export const createReservedRoomBodySchema = z
   .object({
@@ -36,9 +36,8 @@ export const createReservedRoomBodySchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'must be after startAt' });
     } else if (minutes < MIN_RESERVATION_MINUTES) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservation must last at least 15 minutes' });
-    } else if (minutes > MAX_RESERVATION_MINUTES) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservation must last at most 4 hours' });
     }
+    // the maximum depends on the room (its maxDuration): the controller checks it
 
     // SALA-5: only on weekdays, from 08:00 to 20:00
     if (!isWeekday(body.startAt)) {

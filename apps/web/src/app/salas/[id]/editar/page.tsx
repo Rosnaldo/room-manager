@@ -3,7 +3,7 @@ import type { IRoom } from '@repo/shared-types';
 
 import { api, ApiError } from '@/lib/api';
 import { requireAdmin } from '@/lib/session';
-import { RoomForm } from './room-form';
+import { RoomForm } from '../../room-form';
 
 export const metadata = { title: 'Editar sala' };
 

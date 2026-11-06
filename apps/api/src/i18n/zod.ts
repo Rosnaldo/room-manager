@@ -1,7 +1,7 @@
 import { z, ZodIssueCode, type ZodError, type ZodErrorMap, type ZodIssue } from 'zod';
 
 import { translate, type Locale } from '.';
-import type { ErrorDetails } from '../exceptions/http';
+import type { TranslatedDetails } from '../exceptions/http';
 
 const TYPE_NAMES: Record<string, string> = {
   string: 'um texto',
@@ -77,9 +77,9 @@ function translateIssue(issue: ZodIssue, locale: Locale): string {
 }
 
 /** A validation failure as `{ field: [messages] }` in `locale`; problems with the whole object go under `_errors`. */
-export function zodDetails(error: ZodError, locale: Locale): ErrorDetails {
+export function zodDetails(error: ZodError, locale: Locale): TranslatedDetails {
   const { formErrors, fieldErrors } = error.flatten((issue) => translateIssue(issue, locale));
-  const details: ErrorDetails = { ...(fieldErrors as ErrorDetails) };
+  const details: TranslatedDetails = { ...(fieldErrors as TranslatedDetails) };
   if (formErrors.length) details._errors = formErrors;
   return details;
 }

@@ -3,6 +3,7 @@ import type { IRoom, Pagination } from '@repo/shared-types';
 
 import { api } from '@/lib/api';
 import { requireUser } from '@/lib/session';
+import { formatDuration } from '@/lib/datetime';
 import { DeleteRoomButton } from '@/app/salas/delete-room-button';
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -67,8 +68,17 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   return (
     <section>
-      <h1 className="text-2xl font-semibold">Olá, {user.firstName}</h1>
-      <p className="mt-2 text-neutral-500">Escolha uma sala para reservar.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Olá, {user.firstName}</h1>
+          <p className="mt-2 text-neutral-500">Escolha uma sala para reservar.</p>
+        </div>
+        {user.role === 'admin' && (
+          <Link href="/salas/nova" className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
+            Nova sala
+          </Link>
+        )}
+      </div>
 
       {/* a plain GET form: submitting writes the filters to the URL */}
       <form method="get" className="mt-6 flex flex-wrap items-end gap-6 rounded border border-neutral-200 p-4 dark:border-neutral-800">
@@ -120,7 +130,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <li key={room.id} className="rounded border border-neutral-200 p-4 dark:border-neutral-800">
               <h2 className="font-medium">{room.name}</h2>
               <p className="mt-1 text-sm text-neutral-500">
-                {room.maxCapacity} {room.maxCapacity === 1 ? 'pessoa' : 'pessoas'}
+                {room.maxCapacity} {room.maxCapacity === 1 ? 'pessoa' : 'pessoas'} · até {formatDuration(room.maxDuration)} por reserva
               </p>
               {room.resources.length > 0 && (
                 <ul className="mt-3 flex flex-wrap gap-1.5">

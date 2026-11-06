@@ -27,7 +27,13 @@ describe('POST /rooms/create', () => {
 
     const room = roomResponseSchema.parse(res.body);
     // userId only identifies the caller: it isn't part of the room
-    expect(room).toEqual({ id: expect.any(Number), name: body.name, maxCapacity: body.maxCapacity, resources: body.resources });
+    expect(room).toEqual({
+      id: expect.any(Number),
+      name: body.name,
+      maxCapacity: body.maxCapacity,
+      maxDuration: body.maxDuration,
+      resources: body.resources,
+    });
     expect(new RoomRepository(ctx.db).findById(room.id)).toEqual(room);
   });
 
@@ -40,8 +46,18 @@ describe('POST /rooms/create', () => {
   });
 
   it('defaults resources to an empty array', async () => {
-    const res = await post().send({ userId: admin.id, name: 'Bare', maxCapacity: 2 }).expect(201);
+    const res = await post().send({ userId: admin.id, name: 'Bare', maxCapacity: 2, maxDuration: '01:00' }).expect(201);
     expect(roomResponseSchema.parse(res.body).resources).toEqual([]);
+  });
+
+  it.each(['00:15', '04:00', '23:59'])('accepts maxDuration %s', async (maxDuration) => {
+    const room = roomResponseSchema.parse((await post().send(build({ maxDuration })).expect(201)).body);
+    expect(room.maxDuration).toBe(maxDuration);
+  });
+
+  it('explains the maxDuration format', async () => {
+    const res = await post().send(build({ maxDuration: '4h' })).expect(400);
+    expect(errorResponseSchema.parse(res.body).details?.maxDuration).toEqual(['Use uma duração no formato HH:mm, de 00:15 a 23:59.']);
   });
 
   it('returns 409 for a duplicate name, ignoring case', async () => {
@@ -66,6 +82,14 @@ describe('POST /rooms/create', () => {
     ['too many resources', { resources: Array.from({ length: 51 }, (_, i) => `r${i}`) }, 'resources'],
     ['unknown field', { id: 7 }, '_errors'],
     ['missing userId', { userId: undefined }, 'userId'],
+    ['missing maxDuration', { maxDuration: undefined }, 'maxDuration'],
+    ['maxDuration without a leading zero', { maxDuration: '4:00' }, 'maxDuration'],
+    ['maxDuration as minutes:seconds', { maxDuration: '240:00' }, 'maxDuration'],
+    ['maxDuration with seconds', { maxDuration: '04:00:00' }, 'maxDuration'],
+    ['maxDuration minute 60', { maxDuration: '01:60' }, 'maxDuration'],
+    ['maxDuration hour 24', { maxDuration: '24:00' }, 'maxDuration'],
+    ['maxDuration under 15 minutes', { maxDuration: '00:14' }, 'maxDuration'],
+    ['maxDuration as a number', { maxDuration: 240 }, 'maxDuration'],
     ['userId as a string', { userId: '1' }, 'userId'],
   ])('returns 400 for %s', async (_case, override, field) => {
     const body = { ...build(), ...override };

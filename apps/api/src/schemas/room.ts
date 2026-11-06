@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 import { idParamsSchema, paginationQuerySchema, paginationSchema } from './common';
+import { durationToMinutes } from '../lib/duration';
+import { MIN_RESERVATION_MINUTES } from './reserved_room';
 
 /** who is making the request: their role decides what they may do */
 const userId = z.number().int().positive();
@@ -8,6 +10,11 @@ const userId = z.number().int().positive();
 const name = z.string().trim().min(1).max(100);
 
 const maxCapacity = z.number().int().min(1).max(10_000);
+
+/** `HH:mm`, at least the 15-minute minimum reservation (or no booking would fit). */
+const maxDuration = z.string().refine((v) => (durationToMinutes(v) ?? 0) >= MIN_RESERVATION_MINUTES, {
+  message: 'must be a duration in the format HH:mm, from 00:15 to 23:59',
+});
 
 const resourceTag = z.string().trim().toLowerCase().min(1).max(50);
 
@@ -24,6 +31,7 @@ export const createRoomBodySchema = z
     userId,
     name,
     maxCapacity,
+    maxDuration,
     resources: resources.default([]),
   })
   .strict();
@@ -34,6 +42,7 @@ export const editRoomBodySchema = z
     userId,
     name: name.optional(),
     maxCapacity: maxCapacity.optional(),
+    maxDuration: maxDuration.optional(),
     resources: resources.optional(),
   })
   .strict()
@@ -75,6 +84,7 @@ export const roomResponseSchema = z
     id: z.number().int().positive(),
     name: z.string(),
     maxCapacity: z.number().int(),
+    maxDuration: z.string(),
     resources: z.array(z.string()),
   })
   .strict();
