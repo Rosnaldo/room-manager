@@ -1,5 +1,5 @@
-import { and, eq, gt, lt, type SQL } from 'drizzle-orm';
-import type { IReservedRoom } from '@repo/shared-types';
+import { and, count, eq, gt, lt, type SQL } from 'drizzle-orm';
+import type { IReservedRoom, Pagination } from '@repo/shared-types';
 
 import type { DB } from '../db/connection';
 import { reservedRooms, type NewReservedRoomRow, type ReservedRoomRow } from '../db/schema';
@@ -11,6 +11,12 @@ function toReservedRoom(row: ReservedRoomRow): IReservedRoom {
 /** Two intervals overlap when each starts before the other ends; touching ends (10:00-11:00, 11:00-12:00) do not. */
 function overlaps(startAt: string, endAt: string): SQL {
   return and(lt(reservedRooms.startAt, endAt), gt(reservedRooms.endAt, startAt))!;
+}
+
+export interface ListUserReservationsOptions {
+  userId: number;
+  page: number;
+  size: number;
 }
 
 export type CreateReservationResult =
@@ -34,6 +40,35 @@ export class ReservedRoomRepository {
       .orderBy(reservedRooms.startAt)
       .get();
     return row && toReservedRoom(row);
+  }
+
+  /** One user's reservations, in chronological order (by start, then id). */
+  listByUser(opts: ListUserReservationsOptions): { data: IReservedRoom[]; pagination: Pagination } {
+    const where = eq(reservedRooms.userId, opts.userId);
+    const { total } = this.db.select({ total: count() }).from(reservedRooms).where(where).get()!;
+    const rows = this.db
+      .select()
+      .from(reservedRooms)
+      .where(where)
+      .orderBy(reservedRooms.startAt, reservedRooms.id)
+      .limit(opts.size)
+      .offset((opts.page - 1) * opts.size)
+      .all();
+
+    return {
+      data: rows.map(toReservedRoom),
+      pagination: {
+        currentPage: opts.page,
+        totalPages: Math.ceil(total / opts.size),
+        totalRecords: total,
+        size: opts.size,
+      },
+    };
+  }
+
+  /** @returns whether a reservation was deleted */
+  delete(id: number): boolean {
+    return this.db.delete(reservedRooms).where(eq(reservedRooms.id, id)).run().changes > 0;
   }
 
   /** Inserts unless the room is taken. Check and insert run in one transaction, so two requests can't both win. */

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { isLocalDateTime, minutesBetween } from '../lib/local_datetime';
+import { idParamsSchema, paginationQuerySchema, paginationSchema } from './common';
 
 export const MIN_RESERVATION_MINUTES = 15;
 export const MAX_RESERVATION_MINUTES = 4 * 60;
@@ -39,6 +40,10 @@ export const createReservedRoomBodySchema = z
     }
   });
 
+export const listReservedRoomsQuerySchema = paginationQuerySchema.strict();
+
+export const reservedRoomIdParamsSchema = idParamsSchema;
+
 // ---- output ----
 
 export const reservedRoomResponseSchema = z
@@ -48,5 +53,12 @@ export const reservedRoomResponseSchema = z
     roomId: id,
     startAt: localDateTimeSchema,
     endAt: localDateTimeSchema,
+  })
+  .strict();
+
+export const listReservedRoomsResponseSchema = z
+  .object({
+    data: z.array(reservedRoomResponseSchema),
+    pagination: paginationSchema,
   })
   .strict();

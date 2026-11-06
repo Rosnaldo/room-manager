@@ -21,7 +21,12 @@ export const pt: Record<string, string> = {
   'room {id} not found': 'Sala {id} não encontrada.',
   'room {name} already exists': 'Já existe uma sala chamada {name}.',
 
+  // caller identity
+  'the X-User-Id header is required': 'Identifique o usuário (cabeçalho X-User-Id).',
+
   // reservations
+  'reservation {id} not found': 'Reserva {id} não encontrada.',
+  'only the owner can cancel this reservation': 'Só quem fez a reserva pode cancelá-la.',
   'must be a valid date-time in the format YYYY-MM-DDTHH:mm:ss': 'Data e hora inválidas. Use o formato AAAA-MM-DDTHH:mm:ss.',
   'must be after startAt': 'O fim deve ser depois do início.',
   'reservation must last at least 15 minutes': 'A reserva deve durar pelo menos 15 minutos.',
