@@ -3,6 +3,9 @@ import type { IRoom, Pagination } from '@repo/shared-types';
 
 import type { RoomRepository } from '../repositories/room';
 import type { UserRepository } from '../repositories/user';
+import type { ReservedRoomRepository } from '../repositories/reserved_room';
+import { durationToMinutes, formatMinutes } from '../lib/duration';
+import { formatInTimeZone } from '../lib/local_datetime';
 import { ForbiddenException } from '../exceptions/forbidden';
 import { ConflictException } from '../exceptions/conflict';
 import { NotFoundException } from '../exceptions/not_found';
@@ -15,6 +18,8 @@ export interface CreateRoomBody {
   userId: number;
   name: string;
   maxCapacity: number;
+  /** `HH:mm` */
+  maxDuration: string;
   resources: string[];
 }
 
@@ -23,6 +28,7 @@ export interface EditRoomBody {
   userId: number;
   name?: string;
   maxCapacity?: number;
+  maxDuration?: string;
   resources?: string[];
 }
 
@@ -67,7 +73,18 @@ export interface RoomsController {
 
 // ---- handlers ----
 
-export function createRoomsController(rooms: RoomRepository, users: UserRepository): RoomsController {
+export interface RoomsDeps {
+  rooms: RoomRepository;
+  users: UserRepository;
+  reservations: ReservedRoomRepository;
+  /** IANA zone the reservation times are in, to tell which reservations haven't ended */
+  timeZone: string;
+  now?: () => Date;
+}
+
+export function createRoomsController(deps: RoomsDeps): RoomsController {
+  const { rooms, users, reservations, timeZone, now = () => new Date() } = deps;
+
   /** The caller named by `userId` must exist (404) and be an admin (403). */
   function assertAdmin(userId: number): void {
     const user = users.findById(userId);
@@ -89,6 +106,18 @@ export function createRoomsController(rooms: RoomRepository, users: UserReposito
 
       const { id } = req.params;
       if (!rooms.findById(id)) throw new NotFoundException('room {id} not found', { id });
+
+      // a shorter limit can't leave existing (not yet ended) bookings over it
+      if (changes.maxDuration !== undefined) {
+        const minutes = durationToMinutes(changes.maxDuration)!;
+        const longer = reservations.countLongerThan(id, minutes, formatInTimeZone(now(), timeZone));
+        if (longer > 0) {
+          throw new ConflictException('cannot lower the maximum duration to {max}: {count} upcoming reservation(s) last longer', {
+            max: formatMinutes(minutes),
+            count: longer,
+          });
+        }
+      }
 
       const { name } = changes;
       // the name stays unique (ignoring case); keeping or re-casing its own name is fine

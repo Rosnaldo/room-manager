@@ -4,7 +4,6 @@ import { isLocalDateTime, minutesBetween } from '../lib/local_datetime';
 import { idParamsSchema, paginationQuerySchema, paginationSchema } from './common';
 
 export const MIN_RESERVATION_MINUTES = 15;
-export const MAX_RESERVATION_MINUTES = 4 * 60;
 
 const id = z.number().int().positive();
 
@@ -16,8 +15,8 @@ export const localDateTimeSchema = z
 // ---- input ----
 
 /**
- * Shape and duration rules. "Not in the past" and "no overlap" need the clock and the database,
- * so the controller checks those.
+ * Shape and minimum-duration rules. The room's maximum duration, "not in the past" and "no overlap"
+ * need the database or the clock, so the controller checks those.
  */
 export const createReservedRoomBodySchema = z
   .object({
@@ -35,9 +34,8 @@ export const createReservedRoomBodySchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'must be after startAt' });
     } else if (minutes < MIN_RESERVATION_MINUTES) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservation must last at least 15 minutes' });
-    } else if (minutes > MAX_RESERVATION_MINUTES) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservation must last at most 4 hours' });
     }
+    // the maximum depends on the room (its maxDuration): the controller checks it
   });
 
 /** `userId`: whose reservations. In the query string, because a GET request can't carry a body. */

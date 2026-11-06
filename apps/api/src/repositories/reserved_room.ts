@@ -1,4 +1,4 @@
-import { and, count, eq, gt, lt, type SQL } from 'drizzle-orm';
+import { and, count, eq, gt, lt, sql, type SQL } from 'drizzle-orm';
 import type { IReservedRoom, Pagination } from '@repo/shared-types';
 
 import type { DB } from '../db/connection';
@@ -64,6 +64,20 @@ export class ReservedRoomRepository {
         size: opts.size,
       },
     };
+  }
+
+  /**
+   * How many of the room's reservations that end after `endAfter` last longer than `minutes`.
+   * Used to stop a room's maxDuration from going below a booking it already holds.
+   */
+  countLongerThan(roomId: number, minutes: number, endAfter: string): number {
+    // julianday() reads 'YYYY-MM-DDTHH:mm:ss'; the difference is in days
+    const duration = sql`round((julianday(${reservedRooms.endAt}) - julianday(${reservedRooms.startAt})) * 1440)`;
+    return this.db
+      .select({ n: count() })
+      .from(reservedRooms)
+      .where(and(eq(reservedRooms.roomId, roomId), gt(reservedRooms.endAt, endAfter), gt(duration, minutes)))
+      .get()!.n;
   }
 
   /** @returns whether a reservation was deleted */

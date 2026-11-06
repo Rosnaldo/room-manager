@@ -10,9 +10,9 @@ export const seedUsers: (CreateUserBody & { email: string })[] = [
 
 /** Seed rooms. Matched by name (case-insensitive). */
 export const seedRooms: Omit<CreateRoomBody, 'userId'>[] = [
-  { name: 'Sala Ipê', maxCapacity: 8, resources: ['projector', 'whiteboard'] },
-  { name: 'Sala Jacarandá', maxCapacity: 12, resources: ['tv', 'videoconference'] },
-  { name: 'Sala Araucária', maxCapacity: 4, resources: ['whiteboard'] },
-  { name: 'Sala Cedro', maxCapacity: 6, resources: ['tv'] },
-  { name: 'Auditório Pau-Brasil', maxCapacity: 80, resources: ['projector', 'microphone', 'videoconference'] },
+  { name: 'Sala Ipê', maxCapacity: 8, maxDuration: '02:00', resources: ['projector', 'whiteboard'] },
+  { name: 'Sala Jacarandá', maxCapacity: 12, maxDuration: '04:00', resources: ['tv', 'videoconference'] },
+  { name: 'Sala Araucária', maxCapacity: 4, maxDuration: '01:00', resources: ['whiteboard'] },
+  { name: 'Sala Cedro', maxCapacity: 6, maxDuration: '03:00', resources: ['tv'] },
+  { name: 'Auditório Pau-Brasil', maxCapacity: 80, maxDuration: '08:00', resources: ['projector', 'microphone', 'videoconference'] },
 ];
