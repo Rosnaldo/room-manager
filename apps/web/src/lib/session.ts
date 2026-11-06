@@ -2,7 +2,7 @@ import 'server-only';
 
 import { cache } from 'react';
 import { cookies } from 'next/headers';
-import { forbidden, redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { IUser } from '@repo/shared-types';
 
 import { api, ApiError } from './api';
@@ -32,8 +32,9 @@ export async function requireUser(): Promise<IUser> {
   return user;
 }
 
+/** Admin-only pages: anyone else gets a 404, as if the page didn't exist (also when typing the URL). */
 export async function requireAdmin(): Promise<IUser> {
   const user = await requireUser();
-  if (user.role !== 'admin') forbidden();
+  if (user.role !== 'admin') notFound();
   return user;
 }

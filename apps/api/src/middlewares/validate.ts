@@ -13,14 +13,16 @@ interface Schemas<P, B, Q> {
   query?: Schema<Q>;
 }
 
-function parse<T>(schema: Schema<T>, input: unknown, where: string): T {
+const WHERE = {
+  params: 'invalid path params',
+  query: 'invalid query params',
+  body: 'invalid request body',
+} as const;
+
+function parse<T>(schema: Schema<T>, input: unknown, where: keyof typeof WHERE): T {
   const result = schema.safeParse(input);
   if (result.success) return result.data;
-
-  const { formErrors, fieldErrors } = result.error.flatten();
-  const details: Record<string, string[]> = { ...(fieldErrors as Record<string, string[]>) };
-  if (formErrors.length) details._errors = formErrors;
-  throw new BadRequestException(`invalid ${where}`, details);
+  throw new BadRequestException(WHERE[where], { zodError: result.error });
 }
 
 /**
@@ -31,9 +33,9 @@ export function validate<P = ParamsDictionary, B = unknown, Q = ParsedQs>(
   schemas: Schemas<P, B, Q>,
 ): RequestHandler<P, unknown, B, Q> {
   return (req, _res, next) => {
-    if (schemas.params) req.params = parse(schemas.params, req.params, 'path params');
-    if (schemas.query) req.query = parse(schemas.query, req.query, 'query params');
-    if (schemas.body) req.body = parse(schemas.body, req.body ?? {}, 'request body');
+    if (schemas.params) req.params = parse(schemas.params, req.params, 'params');
+    if (schemas.query) req.query = parse(schemas.query, req.query, 'query');
+    if (schemas.body) req.body = parse(schemas.body, req.body ?? {}, 'body');
     next();
   };
 }

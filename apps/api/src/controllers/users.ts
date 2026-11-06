@@ -57,12 +57,12 @@ export interface UsersController {
 export function createUsersController(users: UserRepository): UsersController {
   function assertEmailAvailable(email: string, ownId?: number) {
     const owner = users.findByEmail(email);
-    if (owner && owner.id !== ownId) throw new ConflictException(`email ${email} is already in use`);
+    if (owner && owner.id !== ownId) throw new ConflictException('email {email} is already in use', { email });
   }
 
   function getOr404(id: number): IUser {
     const user = users.findById(id);
-    if (!user) throw new NotFoundException(`user ${id} not found`);
+    if (!user) throw new NotFoundException('user {id} not found', { id });
     return user;
   }
 
@@ -87,7 +87,7 @@ export function createUsersController(users: UserRepository): UsersController {
     },
 
     delete: (req, res) => {
-      if (!users.delete(req.params.id)) throw new NotFoundException(`user ${req.params.id} not found`);
+      if (!users.delete(req.params.id)) throw new NotFoundException('user {id} not found', { id: req.params.id });
       res.status(204).end();
     },
   };

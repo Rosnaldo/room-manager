@@ -50,7 +50,7 @@ describe('GET /users/list', () => {
   ])('returns 400 for %s', async (qs, field) => {
     const res = await ctx.api.get(`/users/list?${qs}`).expect(400);
     const error = errorResponseSchema.parse(res.body);
-    expect(error.message).toBe('invalid query params');
+    expect(error.message).toBe('Parâmetros de consulta inválidos.');
     expect(error.details).toHaveProperty(field);
   });
 });

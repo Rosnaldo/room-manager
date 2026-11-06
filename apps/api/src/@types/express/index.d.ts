@@ -1,5 +1,3 @@
-import { type IUser } from '@repo/shared-types';
-
 interface IUserKc {
   id: string;
   email?: string;
@@ -10,7 +8,6 @@ interface IUserKc {
 declare global {
   namespace Express {
     interface Request {
-      currentUser: IUser;
       userKc: IUserKc;
     }
   }

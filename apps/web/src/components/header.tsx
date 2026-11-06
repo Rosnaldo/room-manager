@@ -12,7 +12,7 @@ export async function Header() {
         <Link href="/" className="font-semibold">
           Room Manager
         </Link>
-        {user?.role === 'admin' && <Link href="/admin">Admin</Link>}
+        {user && <Link href="/minhas-reservas">Minhas reservas</Link>}
         <div className="ml-auto flex items-center gap-3 text-sm">
           {user ? (
             <>
