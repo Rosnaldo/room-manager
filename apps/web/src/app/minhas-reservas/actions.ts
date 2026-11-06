@@ -16,7 +16,7 @@ export async function cancelReservation(_prev: CancelState, formData: FormData):
   if (!Number.isInteger(id) || id <= 0) return { error: 'Reserva inválida.' };
 
   try {
-    await api<void>(`/reservations/delete/${id}`, { method: 'DELETE', userId: user.id });
+    await api<void>(`/reservations/delete/${id}`, { method: 'DELETE', body: { userId: user.id } });
   } catch (err) {
     // the API sends its message already translated
     if (err instanceof ApiError && err.status < 500) return { error: err.message };

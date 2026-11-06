@@ -2,15 +2,37 @@ import type { RequestHandler } from 'express';
 import type { IRoom, Pagination } from '@repo/shared-types';
 
 import type { RoomRepository } from '../repositories/room';
+import type { UserRepository } from '../repositories/user';
+import { ForbiddenException } from '../exceptions/forbidden';
 import { ConflictException } from '../exceptions/conflict';
+import { NotFoundException } from '../exceptions/not_found';
 import type { NoBody, NoParams, NoQuery } from './users';
 
 // ---- declared request/response contracts (tests assert the zod schemas infer exactly these) ----
 
 export interface CreateRoomBody {
+  /** the caller; must be an admin */
+  userId: number;
   name: string;
   maxCapacity: number;
   resources: string[];
+}
+
+export interface EditRoomBody {
+  /** the caller; must be an admin */
+  userId: number;
+  name?: string;
+  maxCapacity?: number;
+  resources?: string[];
+}
+
+export interface RoomIdParams {
+  id: number;
+}
+
+export interface DeleteRoomBody {
+  /** the caller; must be an admin */
+  userId: number;
 }
 
 export interface ListRoomsQuery {
@@ -32,18 +54,60 @@ export interface ListRoomResourcesResponse {
 }
 
 export interface RoomsController {
+  /** admin only */
   create: RequestHandler<NoParams, RoomResponse, CreateRoomBody, NoQuery>;
+  /** admin only */
+  edit: RequestHandler<RoomIdParams, RoomResponse, EditRoomBody, NoQuery>;
+  /** admin only; deletes the room's reservations too */
+  delete: RequestHandler<RoomIdParams, void, DeleteRoomBody, NoQuery>;
+  find: RequestHandler<RoomIdParams, RoomResponse, NoBody, NoQuery>;
   list: RequestHandler<NoParams, ListRoomsResponse, NoBody, ListRoomsQuery>;
   listResources: RequestHandler<NoParams, ListRoomResourcesResponse, NoBody, NoQuery>;
 }
 
 // ---- handlers ----
 
-export function createRoomsController(rooms: RoomRepository): RoomsController {
+export function createRoomsController(rooms: RoomRepository, users: UserRepository): RoomsController {
+  /** The caller named by `userId` must exist (404) and be an admin (403). */
+  function assertAdmin(userId: number): void {
+    const user = users.findById(userId);
+    if (!user) throw new NotFoundException('user {id} not found', { id: userId });
+    if (user.role !== 'admin') throw new ForbiddenException('only admins can do this');
+  }
+
   return {
     create: (req, res) => {
-      if (rooms.findByName(req.body.name)) throw new ConflictException('room {name} already exists', { name: req.body.name });
-      res.status(201).json(rooms.create(req.body));
+      const { userId, ...room } = req.body;
+      assertAdmin(userId);
+      if (rooms.findByName(room.name)) throw new ConflictException('room {name} already exists', { name: room.name });
+      res.status(201).json(rooms.create(room));
+    },
+
+    edit: (req, res) => {
+      const { userId, ...changes } = req.body;
+      assertAdmin(userId);
+
+      const { id } = req.params;
+      if (!rooms.findById(id)) throw new NotFoundException('room {id} not found', { id });
+
+      const { name } = changes;
+      // the name stays unique (ignoring case); keeping or re-casing its own name is fine
+      const sameName = name !== undefined ? rooms.findByName(name) : undefined;
+      if (sameName && sameName.id !== id) throw new ConflictException('room {name} already exists', { name: name! });
+
+      res.json(rooms.update(id, changes));
+    },
+
+    delete: (req, res) => {
+      assertAdmin(req.body.userId);
+      if (!rooms.delete(req.params.id)) throw new NotFoundException('room {id} not found', { id: req.params.id });
+      res.status(204).end();
+    },
+
+    find: (req, res) => {
+      const room = rooms.findById(req.params.id);
+      if (!room) throw new NotFoundException('room {id} not found', { id: req.params.id });
+      res.json(room);
     },
 
     list: (req, res) => {

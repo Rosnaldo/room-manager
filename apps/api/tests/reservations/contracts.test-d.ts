@@ -8,15 +8,17 @@ import type { IReservedRoom } from '@repo/shared-types';
 
 import type {
   CreateReservedRoomBody,
+  DeleteReservedRoomBody,
   ListReservedRoomsQuery,
   ListReservedRoomsResponse,
   ReservedRoomIdParams,
   ReservedRoomResponse,
   ReservedRoomsController,
 } from '../../src/controllers/reserved_rooms';
-import type { NoBody, NoParams, NoQuery } from '../../src/controllers/users';
+import type { NoParams, NoQuery } from '../../src/controllers/users';
 import {
   type createReservedRoomBodySchema,
+  type deleteReservedRoomBodySchema,
   type listReservedRoomsQuerySchema,
   type listReservedRoomsResponseSchema,
   type reservedRoomIdParamsSchema,
@@ -45,7 +47,8 @@ describe('zod input schemas infer the controller request types', () => {
     expectTypeOf<z.output<typeof reservedRoomIdParamsSchema>>().toEqualTypeOf<C['params']>();
     expectTypeOf<z.output<typeof reservedRoomIdParamsSchema>>().toEqualTypeOf<ReservedRoomIdParams>();
     expectTypeOf<C['query']>().toEqualTypeOf<NoQuery>();
-    expectTypeOf<C['body']>().toEqualTypeOf<NoBody>();
+    expectTypeOf<z.output<typeof deleteReservedRoomBodySchema>>().toEqualTypeOf<C['body']>();
+    expectTypeOf<z.output<typeof deleteReservedRoomBodySchema>>().toEqualTypeOf<DeleteReservedRoomBody>();
     expectTypeOf<C['response']>().toEqualTypeOf<void>();
   });
 });

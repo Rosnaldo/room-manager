@@ -23,6 +23,11 @@ export interface CreateReservedRoomBody {
 export interface ListReservedRoomsQuery {
   page: number;
   size: number;
+  userId: number;
+}
+
+export interface DeleteReservedRoomBody {
+  userId: number;
 }
 
 export interface ReservedRoomIdParams {
@@ -38,10 +43,10 @@ export interface ListReservedRoomsResponse {
 
 export interface ReservedRoomsController {
   create: RequestHandler<NoParams, ReservedRoomResponse, CreateReservedRoomBody, NoQuery>;
-  /** the caller's own reservations only; needs req.currentUser */
+  /** one user's reservations (userId in the query) */
   list: RequestHandler<NoParams, ListReservedRoomsResponse, NoBody, ListReservedRoomsQuery>;
-  /** by its owner only; needs req.currentUser */
-  delete: RequestHandler<ReservedRoomIdParams, void, NoBody, NoQuery>;
+  /** by its owner only */
+  delete: RequestHandler<ReservedRoomIdParams, void, DeleteReservedRoomBody, NoQuery>;
 }
 
 export interface ReservedRoomsDeps {
@@ -97,14 +102,18 @@ export function createReservedRoomsController(deps: ReservedRoomsDeps): Reserved
     },
 
     list: (req, res) => {
-      res.json(reservations.listByUser({ userId: req.currentUser.id, page: req.query.page, size: req.query.size }));
+      const { userId, page, size } = req.query;
+      if (!users.findById(userId)) throw new NotFoundException('user {id} not found', { id: userId });
+      res.json(reservations.listByUser({ userId, page, size }));
     },
 
     delete: (req, res) => {
       const reservation = reservations.findById(req.params.id);
       if (!reservation) throw new NotFoundException('reservation {id} not found', { id: req.params.id });
 
-      if (reservation.userId !== req.currentUser.id) {
+      const { userId } = req.body;
+      if (!users.findById(userId)) throw new NotFoundException('user {id} not found', { id: userId });
+      if (reservation.userId !== userId) {
         throw new ForbiddenException('only the owner can cancel this reservation');
       }
 

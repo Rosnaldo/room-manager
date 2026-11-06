@@ -40,7 +40,13 @@ export const createReservedRoomBodySchema = z
     }
   });
 
-export const listReservedRoomsQuerySchema = paginationQuerySchema.strict();
+/** `userId`: whose reservations. In the query string, because a GET request can't carry a body. */
+export const listReservedRoomsQuerySchema = paginationQuerySchema
+  .extend({ userId: z.coerce.number().int().positive() })
+  .strict();
+
+/** The caller; only the reservation's owner can cancel it. */
+export const deleteReservedRoomBodySchema = z.object({ userId: id }).strict();
 
 export const reservedRoomIdParamsSchema = idParamsSchema;
 

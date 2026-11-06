@@ -11,7 +11,7 @@ export const roomFactory = new Factory<NewRoomRow, IRoom>({
   persist: (db, attrs) => new RoomRepository(db).create(attrs),
 });
 
-/** Request payloads (not persisted). */
+/** Request payloads (not persisted). userId has no sensible default: pass the caller's. */
 export const createRoomBodyFactory = new Factory<CreateRoomBody>({
-  defaults: (n) => ({ name: `New Room ${n}`, maxCapacity: 10, resources: ['projector', 'tv'] }),
+  defaults: (n) => ({ userId: 0, name: `New Room ${n}`, maxCapacity: 10, resources: ['projector', 'tv'] }),
 });

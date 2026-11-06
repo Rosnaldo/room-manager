@@ -14,7 +14,6 @@ import { createRoomsRouter } from './routes/rooms';
 import { ReservedRoomRepository } from './repositories/reserved_room';
 import { createReservedRoomsController } from './controllers/reserved_rooms';
 import { createReservedRoomsRouter } from './routes/reserved_rooms';
-import { requireCurrentUser } from './middlewares/current_user';
 
 export interface AppOptions {
   /** clock for "is it in the past" checks; tests pass a fixed one */
@@ -31,7 +30,7 @@ export function createApp(db: DB, options: AppOptions = {}): Express {
   const users = new UserRepository(db);
   const rooms = new RoomRepository(db);
   app.use(createUsersRouter(createUsersController(users)));
-  app.use(createRoomsRouter(createRoomsController(rooms)));
+  app.use(createRoomsRouter(createRoomsController(rooms, users)));
   app.use(
     createReservedRoomsRouter(
       createReservedRoomsController({
@@ -41,7 +40,6 @@ export function createApp(db: DB, options: AppOptions = {}): Express {
         timeZone: properties.timeZone,
         now: options.now,
       }),
-      requireCurrentUser(users),
     ),
   );
 

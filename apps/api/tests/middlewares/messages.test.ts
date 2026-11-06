@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useTestApp } from '../helpers/app';
 import { roomFactory } from '../factories/room.factory';
+import { adminFactory } from '../factories/user.factory';
 import { errorResponseSchema } from '../../src/schemas/common';
 import { resolveLocale, translate } from '../../src/i18n';
 import { pt } from '../../src/i18n/pt';
@@ -13,10 +14,15 @@ import { NotFoundException } from '../../src/exceptions/not_found';
  */
 describe('error message translation', () => {
   const ctx = useTestApp();
-  const createRoom = (body: unknown, lang?: string) => {
+  let adminId: number;
+  beforeEach(() => {
+    adminId = adminFactory.create(ctx.db).id;
+  });
+  /** POST /rooms/create as the admin */
+  const createRoom = (body: object, lang?: string) => {
     const req = ctx.api.post('/rooms/create');
     if (lang) req.set('Accept-Language', lang);
-    return req.send(body as object);
+    return req.send({ userId: adminId, ...body });
   };
 
   describe('zod built-in checks', () => {

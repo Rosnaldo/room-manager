@@ -82,4 +82,9 @@ export class RoomRepository {
     const row = this.db.update(rooms).set(data).where(eq(rooms.id, id)).returning().get();
     return row && toRoom(row);
   }
+
+  /** Its reservations go with it (ON DELETE CASCADE). @returns whether a room was deleted */
+  delete(id: number): boolean {
+    return this.db.delete(rooms).where(eq(rooms.id, id)).run().changes > 0;
+  }
 }

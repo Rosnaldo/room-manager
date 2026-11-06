@@ -3,6 +3,7 @@ import type { IRoom, Pagination } from '@repo/shared-types';
 
 import { api } from '@/lib/api';
 import { requireUser } from '@/lib/session';
+import { DeleteRoomButton } from '@/app/salas/delete-room-button';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -61,6 +62,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     api<{ data: string[] }>('/rooms/resources'),
   ]);
 
+  const isAdmin = user.role === 'admin';
   const hasFilters = filters.capacity !== undefined || filters.resources.length > 0;
 
   return (
@@ -129,12 +131,25 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   ))}
                 </ul>
               )}
-              <Link
-                href={`/reservar?roomId=${room.id}`}
-                className="mt-4 inline-block rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                Reservar
-              </Link>
+              <div className="mt-4 flex flex-wrap items-start gap-2">
+                <Link
+                  href={`/reservar?roomId=${room.id}`}
+                  className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Reservar
+                </Link>
+                {isAdmin && (
+                  <>
+                    <Link
+                      href={`/salas/${room.id}/editar`}
+                      className="rounded border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                    >
+                      Editar
+                    </Link>
+                    <DeleteRoomButton roomId={room.id} roomName={room.name} />
+                  </>
+                )}
+              </div>
             </li>
           ))}
         </ul>
