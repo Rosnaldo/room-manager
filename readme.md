@@ -43,3 +43,16 @@ npm test            # all tests (turbo)
 npm run lint        # lint api + web
 npm run ci          # lint + types + tests + build, same as CI
 ```
+
+## Deploy
+
+Deploy das imagens de api e web (Registro de imagens em ECR) em ECS Fargate subnet privada. Serviços internos atrás de um ALB (substituindo nginx). RDS PostgreSQL (Multi-AZ in prod) no lugar SQLite. Segredos guardados em Secrets Manager e configurações em SSM Parameter Store, ambos injetodos em ECS. Logs no Cloud Watch.
+
+Requisições de reserva de sala concorrentes poderão ser tratadas pelo próprio Postgres:
+
+```
+ALTER TABLE reserved_rooms
+  ADD CONSTRAINT reserved_rooms_no_overlap
+  EXCLUDE USING gist (room_id WITH =, tsrange(start_at, end_at, '[)') WITH &&);
+```
+
