@@ -17,12 +17,12 @@ export const pt: Record<string, string> = {
   'email {email} is already in use': 'O email {email} já está em uso.',
   'at least one field is required': 'Informe pelo menos um campo.',
 
+  // permissions
+  'only admins can do this': 'Apenas administradores podem fazer isso.',
+
   // rooms
   'room {id} not found': 'Sala {id} não encontrada.',
   'room {name} already exists': 'Já existe uma sala chamada {name}.',
-
-  // caller identity
-  'the X-User-Id header is required': 'Identifique o usuário (cabeçalho X-User-Id).',
 
   // reservations
   'reservation {id} not found': 'Reserva {id} não encontrada.',

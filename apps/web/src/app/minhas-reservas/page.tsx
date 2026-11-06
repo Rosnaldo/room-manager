@@ -18,11 +18,10 @@ export default async function MyReservationsPage({ searchParams }: { searchParam
   const requested = Number(Array.isArray(rawPage) ? rawPage[0] : rawPage);
   const page = Number.isInteger(requested) && requested >= 1 ? requested : 1;
 
-  // the API identifies the caller by X-User-Id and returns only their reservations, oldest first
+  // only this user's reservations, oldest first
   const [{ data: reservations, pagination }, { data: rooms }] = await Promise.all([
     api<{ data: IReservedRoom[]; pagination: Pagination }>('/reservations/list', {
-      query: { page, size: PAGE_SIZE },
-      userId: user.id,
+      query: { userId: user.id, page, size: PAGE_SIZE },
     }),
     api<{ data: IRoom[]; pagination: Pagination }>('/rooms/list', { query: { size: 100 } }),
   ]);

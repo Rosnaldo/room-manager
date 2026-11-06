@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-import { paginationQuerySchema, paginationSchema } from './common';
+import { idParamsSchema, paginationQuerySchema, paginationSchema } from './common';
+
+/** who is making the request: their role decides what they may do */
+const userId = z.number().int().positive();
 
 const name = z.string().trim().min(1).max(100);
 
@@ -18,11 +21,28 @@ const resources = z
 
 export const createRoomBodySchema = z
   .object({
+    userId,
     name,
     maxCapacity,
     resources: resources.default([]),
   })
   .strict();
+
+/** userId plus at least one field to change. Resources replace the room's whole list. */
+export const editRoomBodySchema = z
+  .object({
+    userId,
+    name: name.optional(),
+    maxCapacity: maxCapacity.optional(),
+    resources: resources.optional(),
+  })
+  .strict()
+  .refine(({ userId: _, ...fields }) => Object.keys(fields).length > 0, { message: 'at least one field is required' });
+
+export const roomIdParamsSchema = idParamsSchema;
+
+/** The caller; must be an admin. */
+export const deleteRoomBodySchema = z.object({ userId }).strict();
 
 /**
  * Resource filter from the URL: `?resources=projector,tv`, `?resources=projector&resources=tv`, or both.

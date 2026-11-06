@@ -25,16 +25,15 @@ function buildUrl(path: string, query?: Query): string {
 
 export async function api<T>(
   path: string,
-  init: Omit<RequestInit, 'body'> & { query?: Query; body?: unknown; userId?: number } = {},
+  init: Omit<RequestInit, 'body'> & { query?: Query; body?: unknown } = {},
 ): Promise<T> {
-  const { query, body, userId, headers, ...rest } = init;
+  const { query, body, headers, ...rest } = init;
 
   const res = await fetch(buildUrl(path, query), {
     cache: 'no-store',
     ...rest,
     headers: {
       ...(body !== undefined && { 'Content-Type': 'application/json' }),
-      ...(userId !== undefined && { 'X-User-Id': String(userId) }),
       ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),

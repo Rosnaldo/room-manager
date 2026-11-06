@@ -26,7 +26,7 @@ describe('GET /reservations/list', () => {
     reservedRoomFactory.create(ctx.db, { userId: user.id, roomId: room.id, startAt, endAt });
   const listAs = async (user: IUser, qs = '') =>
     listReservedRoomsResponseSchema.parse(
-      (await ctx.api.get(`/reservations/list?${qs}`).set('X-User-Id', String(user.id)).expect(200)).body,
+      (await ctx.api.get(`/reservations/list?userId=${user.id}${qs && `&${qs}`}`).expect(200)).body,
     );
 
   it('returns an empty page when the user has no reservations', async () => {
@@ -57,25 +57,20 @@ describe('GET /reservations/list', () => {
     expect((await listAs(maria, 'size=2&page=2')).data).toEqual([c]);
   });
 
-  describe('caller identity', () => {
-    it('returns 401 without X-User-Id', async () => {
-      const res = await ctx.api.get('/reservations/list').expect(401);
-      expect(errorResponseSchema.parse(res.body).message).toBe('Identifique o usuário (cabeçalho X-User-Id).');
+  describe('userId', () => {
+    it.each([
+      ['missing', ''],
+      ['malformed', 'userId=abc'],
+      ['zero', 'userId=0'],
+      ['negative', 'userId=-1'],
+    ])('returns 400 when %s', async (_case, qs) => {
+      const res = await ctx.api.get(`/reservations/list?${qs}`).expect(400);
+      expect(errorResponseSchema.parse(res.body).details).toHaveProperty('userId');
     });
 
-    it.each(['abc', '0', '-1', '1.5', ' '])('returns 401 for X-User-Id %j', async (value) => {
-      await ctx.api.get('/reservations/list').set('X-User-Id', value).expect(401);
-    });
-
-    it('returns 401 for an unknown user', async () => {
-      const res = await ctx.api.get('/reservations/list').set('X-User-Id', '9999').expect(401);
+    it('returns 404 for an unknown user', async () => {
+      const res = await ctx.api.get('/reservations/list?userId=9999').expect(404);
       expect(errorResponseSchema.parse(res.body).message).toBe('Usuário 9999 não encontrado.');
-    });
-
-    it('ignores a userId in the query: it cannot list someone else', async () => {
-      reserve(joao, ipe, '2030-01-20T10:00:00', '2030-01-20T11:00:00');
-      const res = await ctx.api.get(`/reservations/list?userId=${joao.id}`).set('X-User-Id', String(maria.id)).expect(400);
-      expect(errorResponseSchema.parse(res.body).details?._errors?.[0]).toMatch(/userId/);
     });
   });
 
@@ -83,7 +78,7 @@ describe('GET /reservations/list', () => {
     ['page=0', 'page'],
     ['size=101', 'size'],
   ])('returns 400 for %s', async (qs, field) => {
-    const res = await ctx.api.get(`/reservations/list?${qs}`).set('X-User-Id', String(maria.id)).expect(400);
+    const res = await ctx.api.get(`/reservations/list?userId=${maria.id}&${qs}`).expect(400);
     const error = errorResponseSchema.parse(res.body);
     expect(error.message).toBe('Parâmetros de consulta inválidos.');
     expect(error.details).toHaveProperty(field);

@@ -19,10 +19,9 @@ describe('DELETE /reservations/delete/:id', () => {
     reservation = reservedRoomFactory.create(ctx.db, { userId: owner.id, roomId: room.id });
   });
 
-  const deleteAs = (user: IUser | undefined, id = reservation.id) => {
-    const req = ctx.api.delete(`/reservations/delete/${id}`);
-    return user ? req.set('X-User-Id', String(user.id)) : req;
-  };
+  /** DELETE with `user` as the caller (userId in the body) */
+  const deleteAs = (user: IUser | undefined, id = reservation.id) =>
+    ctx.api.delete(`/reservations/delete/${id}`).send(user ? { userId: user.id } : {});
   const stillThere = () => new ReservedRoomRepository(ctx.db).findById(reservation.id) !== undefined;
 
   it('lets the owner cancel it', async () => {
@@ -58,18 +57,21 @@ describe('DELETE /reservations/delete/:id', () => {
     await deleteAs(owner).expect(404);
   });
 
-  it('returns 401 without X-User-Id', async () => {
-    await deleteAs(undefined).expect(401);
+  it('returns 400 without userId', async () => {
+    const res = await deleteAs(undefined).expect(400);
+    expect(errorResponseSchema.parse(res.body).details).toHaveProperty('userId');
     expect(stillThere()).toBe(true);
   });
 
-  it('returns 401 for an unknown user', async () => {
-    await ctx.api.delete(`/reservations/delete/${reservation.id}`).set('X-User-Id', '9999').expect(401);
+  it('returns 404 for an unknown userId', async () => {
+    const res = await ctx.api.delete(`/reservations/delete/${reservation.id}`).send({ userId: 9999 }).expect(404);
+    expect(errorResponseSchema.parse(res.body).message).toBe('Usuário 9999 não encontrado.');
     expect(stillThere()).toBe(true);
   });
+
 
   it.each(['abc', '0', '-1'])('returns 400 for id %s', async (id) => {
-    const res = await ctx.api.delete(`/reservations/delete/${id}`).set('X-User-Id', String(owner.id)).expect(400);
+    const res = await ctx.api.delete(`/reservations/delete/${id}`).send({ userId: owner.id }).expect(400);
     expect(errorResponseSchema.parse(res.body).message).toBe('Parâmetros da URL inválidos.');
   });
 

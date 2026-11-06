@@ -8,6 +8,9 @@ import type { IRoom } from '@repo/shared-types';
 
 import type {
   CreateRoomBody,
+  DeleteRoomBody,
+  EditRoomBody,
+  RoomIdParams,
   ListRoomResourcesResponse,
   ListRoomsQuery,
   ListRoomsResponse,
@@ -17,6 +20,9 @@ import type {
 import type { NoParams, NoQuery } from '../../src/controllers/users';
 import {
   type createRoomBodySchema,
+  type deleteRoomBodySchema,
+  type editRoomBodySchema,
+  type roomIdParamsSchema,
   type listRoomsQuerySchema,
   type listRoomResourcesResponseSchema,
   type listRoomsResponseSchema,
@@ -33,7 +39,31 @@ describe('zod input schemas infer the controller request types', () => {
     expectTypeOf<z.output<typeof emptySchema>>().toEqualTypeOf<C['params']>();
     expectTypeOf<z.output<typeof emptySchema>>().toEqualTypeOf<C['query']>();
     // resources may be omitted by clients; the schema defaults it
-    expectTypeOf<z.input<typeof createRoomBodySchema>>().toEqualTypeOf<{ name: string; maxCapacity: number; resources?: string[] }>();
+    expectTypeOf<z.input<typeof createRoomBodySchema>>().toEqualTypeOf<{ userId: number; name: string; maxCapacity: number; resources?: string[] }>();
+  });
+
+  it('PATCH /rooms/edit/:id', () => {
+    type C = Contract<RoomsController['edit']>;
+    expectTypeOf<z.output<typeof editRoomBodySchema>>().toEqualTypeOf<C['body']>();
+    expectTypeOf<z.output<typeof editRoomBodySchema>>().toEqualTypeOf<EditRoomBody>();
+    expectTypeOf<z.output<typeof roomIdParamsSchema>>().toEqualTypeOf<C['params']>();
+    expectTypeOf<z.output<typeof roomIdParamsSchema>>().toEqualTypeOf<RoomIdParams>();
+    expectTypeOf<C['query']>().toEqualTypeOf<NoQuery>();
+    expectTypeOf<C['response']>().toEqualTypeOf<RoomResponse>();
+  });
+
+  it('DELETE /rooms/delete/:id', () => {
+    type C = Contract<RoomsController['delete']>;
+    expectTypeOf<z.output<typeof deleteRoomBodySchema>>().toEqualTypeOf<C['body']>();
+    expectTypeOf<z.output<typeof deleteRoomBodySchema>>().toEqualTypeOf<DeleteRoomBody>();
+    expectTypeOf<z.output<typeof roomIdParamsSchema>>().toEqualTypeOf<C['params']>();
+    expectTypeOf<C['response']>().toEqualTypeOf<void>();
+  });
+
+  it('GET /rooms/find/:id', () => {
+    type C = Contract<RoomsController['find']>;
+    expectTypeOf<z.output<typeof roomIdParamsSchema>>().toEqualTypeOf<C['params']>();
+    expectTypeOf<C['response']>().toEqualTypeOf<RoomResponse>();
   });
 
   it('GET /rooms/list', () => {
