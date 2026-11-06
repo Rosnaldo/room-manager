@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-06
+
 ### Added
 
 - **SALA-4** — Admins create, edit and delete rooms.
@@ -34,3 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `maxCapacity >= N` and all the given resources.
   - `GET /rooms/resources` lists the resource tags in use.
   - Web: home page lists rooms, with filters kept in the URL.
+
+[Unreleased]: https://github.com/Rosnaldo/room-manager/compare/v1.0.0...develop
+[1.0.0]: https://github.com/Rosnaldo/room-manager/releases/tag/v1.0.0
