@@ -30,15 +30,15 @@ describe('GET /reservations/list', () => {
     );
 
   it('returns an empty page when the user has no reservations', async () => {
-    reserve(joao, ipe, '2030-01-20T10:00:00', '2030-01-20T11:00:00');
+    reserve(joao, ipe, '2030-01-21T10:00:00', '2030-01-21T11:00:00');
     expect(await listAs(maria)).toEqual({ data: [], pagination: { currentPage: 1, totalPages: 0, totalRecords: 0, size: 20 } });
   });
 
   it("lists only the caller's reservations, in chronological order", async () => {
     const late = reserve(maria, ipe, '2030-02-01T09:00:00', '2030-02-01T10:00:00');
-    reserve(joao, ipe, '2030-01-20T10:00:00', '2030-01-20T11:00:00');
-    const early = reserve(maria, cedro, '2030-01-20T08:00:00', '2030-01-20T09:00:00');
-    const middle = reserve(maria, ipe, '2030-01-20T14:00:00', '2030-01-20T15:00:00');
+    reserve(joao, ipe, '2030-01-21T10:00:00', '2030-01-21T11:00:00');
+    const early = reserve(maria, cedro, '2030-01-21T08:00:00', '2030-01-21T09:00:00');
+    const middle = reserve(maria, ipe, '2030-01-21T14:00:00', '2030-01-21T15:00:00');
     reserve(joao, cedro, '2030-01-25T10:00:00', '2030-01-25T11:00:00');
 
     const page = await listAs(maria);
@@ -47,9 +47,9 @@ describe('GET /reservations/list', () => {
   });
 
   it('paginates', async () => {
-    const a = reserve(maria, ipe, '2030-01-20T08:00:00', '2030-01-20T09:00:00');
-    const b = reserve(maria, ipe, '2030-01-20T10:00:00', '2030-01-20T11:00:00');
-    const c = reserve(maria, ipe, '2030-01-20T12:00:00', '2030-01-20T13:00:00');
+    const a = reserve(maria, ipe, '2030-01-21T08:00:00', '2030-01-21T09:00:00');
+    const b = reserve(maria, ipe, '2030-01-21T10:00:00', '2030-01-21T11:00:00');
+    const c = reserve(maria, ipe, '2030-01-21T12:00:00', '2030-01-21T13:00:00');
 
     const page1 = await listAs(maria, 'size=2');
     expect(page1.data).toEqual([a, b]);

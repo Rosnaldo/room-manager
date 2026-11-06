@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-06
+
+### Fixed
+
+- **SALA-5** (production incident) — Reservations can only happen on weekdays
+  (Monday to Friday), from 08:00 to 20:00 local time.
+  - `POST /reservations/create` rejects (400) a start on a Saturday or Sunday,
+    a start before 08:00, and an end after 20:00 or on another day.
+  - Web: the booking form only offers times from 08:00 to 20:00.
+
 ## [1.0.0] - 2026-11-06
 
 ### Added
@@ -37,5 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GET /rooms/resources` lists the resource tags in use.
   - Web: home page lists rooms, with filters kept in the URL.
 
-[Unreleased]: https://github.com/Rosnaldo/room-manager/compare/v1.0.0...develop
+[Unreleased]: https://github.com/Rosnaldo/room-manager/compare/v1.0.1...develop
+[1.0.1]: https://github.com/Rosnaldo/room-manager/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Rosnaldo/room-manager/releases/tag/v1.0.0
