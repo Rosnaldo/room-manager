@@ -71,7 +71,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* a plain GET form: submitting writes the filters to the URL */}
       <form method="get" className="mt-6 flex flex-wrap items-end gap-6 rounded border border-neutral-200 p-4 dark:border-neutral-800">
         <label className="flex flex-col gap-1 text-sm">
-          Capacidade (pessoas)
+          Capacidade mínima
           <input
             type="number"
             name="capacity"
