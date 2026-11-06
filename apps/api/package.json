@@ -1,0 +1,58 @@
+{
+  "name": "api",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node build/index.js",
+    "local": "NODE_ENV=local nodemon",
+    "dev": "NODE_ENV=dev nodemon",
+    "tsc": "rimraf build && tsc -p tsconfig.src.json && tsc-alias -p tsconfig.src.json && rimraf *.tsbuildinfo",
+    "build": "npm run tsc",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "test:watch": "vitest",
+    "check-types": "tsc -p tsconfig.test.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "seed": "tsx src/seed.ts"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src",
+      "drizzle"
+    ],
+    "ext": "ts,json,sql",
+    "exec": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@repo/shared-types": "*",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.45.4",
+    "express": "^4.19.2",
+    "pino": "^9.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.9",
+    "@types/supertest": "^7.2.1",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9.39.5",
+    "globals": "^14.0.0",
+    "nodemon": "^3.1.14",
+    "rimraf": "^6.1.3",
+    "supertest": "^7.3.1",
+    "tsc-alias": "^1.9.1",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^4.1.12"
+  }
+}

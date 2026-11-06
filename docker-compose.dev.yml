@@ -1,0 +1,72 @@
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      # host ports are overridable via ./.env
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    environment:
+      # render templates/nginx.conf.template -> /etc/nginx/nginx.conf, substituting only PUBLIC_* vars
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
+      NGINX_ENVSUBST_FILTER: ^PUBLIC_
+      PUBLIC_HTTPS_PORT: ${NGINX_HTTPS_PORT:-443}
+    depends_on:
+      api:
+        condition: service_healthy
+        restart: true
+      web:
+        condition: service_started
+        restart: true
+    volumes:
+      # Main nginx config (template, rendered at start)
+      - ./apps/nginx/dev/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+      - ./apps/nginx/dev/certs:/etc/nginx/certs:ro
+    networks:
+      - room-manager
+
+  api:
+    image: api
+    container_name: api
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: apps/api/dockerfile.dev
+    ports:
+      - "${API_PORT:-4000}:4000"
+    env_file:
+      - ./apps/api/.env.dev
+    environment:
+      # overrides .env.dev; set it in ./.env if you change the nginx port
+      WEB_ORIGIN: ${WEB_ORIGIN:-https://localhost,http://localhost:5173}
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const http = require('http'); http.get('http://127.0.0.1:4000/readiness', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - room-manager
+
+  web:
+    image: web
+    container_name: web
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: apps/web/dockerfile.dev
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    env_file:
+      - ./apps/web/.env.dev
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    networks:
+      - room-manager
+
+networks:
+  room-manager:
+    name: room-manager_dev

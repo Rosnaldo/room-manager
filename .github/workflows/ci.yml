@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-
+
+      - run: npm ci
+
+      - name: Lint, type-check (incl. zod contract tests), test, build
+        run: npx turbo run lint check-types test build
+
+  database:
+    name: Migrations & smoke test
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_FILE: ${{ runner.temp }}/ci.db
+      NODE_ENV: test
+      LOG_LEVEL: warn
+      PORT: 4000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Migrations are in sync with the schema
+        run: |
+          npm run build -w @repo/shared-types
+          npm run db:generate -w api
+          if [ -n "$(git status --porcelain apps/api/drizzle)" ]; then
+            echo "::error::Schema changed without a committed migration. Run 'npm run db:generate -w api' and commit apps/api/drizzle."
+            git status --porcelain apps/api/drizzle
+            exit 1
+          fi
+          npx -w api drizzle-kit check
+
+      - name: Build API
+        run: npm run build -w api
+
+      - name: Smoke test the API
+        run: |
+          npm run start -w api &
+          for i in $(seq 30); do curl -sf localhost:4000/readiness >/dev/null && break; sleep 1; done
+          curl -sf localhost:4000/readiness
+        # `start` runs the compiled build, so it also proves the production build boots and migrates
+        env:
+          NODE_ENV: production
+
+  pr-rules:
+    name: Git flow rules
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Branch name and target follow git flow
+        env:
+          HEAD: ${{ github.head_ref }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          feature='^feature/[a-z0-9-]+$'
+          hotfix='^hotfix/[a-z0-9.-]+$'
+          release='^release/[0-9]+\.[0-9]+\.[0-9]+$'
+          ok=false
+          case "$BASE" in
+            develop) [[ $HEAD =~ $feature || $HEAD =~ $hotfix || $HEAD =~ $release ]] && ok=true ;;
+            main)    [[ $HEAD =~ $hotfix || $HEAD =~ $release ]] && ok=true ;;
+          esac
+          if [ "$ok" != true ]; then
+            echo "::error::'$HEAD' -> '$BASE' is not allowed."
+            echo "develop accepts feature/<name>, hotfix/<name> (lowercase letters, digits, dots, hyphens), release/<x.y.z> (merge-backs)"
+            echo "main accepts hotfix/<name>, release/<x.y.z>"
+            exit 1
+          fi
+          echo "'$HEAD' -> '$BASE' ok"

@@ -1,0 +1,10 @@
+node_modules/
+.turbo/
+coverage/
+*.log
+.env
+.DS_Store
+
+# challenge description (kept local)
+Desafio-Tecnico-Full-Stack-Pleno-Sensedia-.pdf
+dist/

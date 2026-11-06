@@ -1,0 +1,91 @@
+
+# Rendered by the nginx image's envsubst at container start (see docker-compose.dev.yml).
+# Only ${PUBLIC_*} variables are substituted; nginx's own $variables are left untouched.
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include mime.types;
+    sendfile on;
+
+    # Only send "Connection: upgrade" for websocket requests (Next.js HMR, /api ws);
+    # plain requests keep normal keep-alive semantics.
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    # Docker's embedded DNS. Resolving upstreams per request (via variables below)
+    # lets nginx boot even if web/api aren't up yet, and survives container restarts.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
+    server {
+        listen 80;
+        server_name localhost www.localhost;
+        return 301 https://$host:${PUBLIC_HTTPS_PORT}$request_uri;  # redireciona todo HTTP para HTTPS
+    }
+
+    server {
+        listen 443 ssl;
+        http2 on;
+        server_name localhost www.localhost;
+
+        ssl_certificate /etc/nginx/certs/localhost.pem;
+        ssl_certificate_key /etc/nginx/certs/localhost-key.pem;
+
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        # NGINX compresses responses before sending them to the client (browser)
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_proxied expired no-cache no-store private auth;
+        gzip_types
+            text/plain
+            text/css
+            text/xml
+            text/javascript
+            application/javascript
+            application/xml+rss
+            application/json;
+
+        location / {
+            set $web_upstream http://web:5173;
+            proxy_pass $web_upstream;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
+        location /api/ {
+            client_max_body_size 10m;
+            # strip the /api prefix: /api/users/list -> /users/list
+            set $api_upstream http://api:4000;
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass $api_upstream;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            # /ws/volunteer and /ws/customer are long-lived websockets under
+            # this same prefix -- nginx's 60s default read/send timeout has
+            # almost no margin over the app's 30s ping interval, and closes
+            # the connection as merely "idle" even though it's healthy.
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+    }
+}
