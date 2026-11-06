@@ -42,7 +42,6 @@ jobs:
     name: Migrations & smoke test
     runs-on: ubuntu-latest
     env:
-      DATABASE_FILE: ${{ runner.temp }}/ci.db
       NODE_ENV: test
       LOG_LEVEL: warn
       PORT: 4000
@@ -78,6 +77,8 @@ jobs:
         # `start` runs the compiled build, so it also proves the production build boots and migrates
         env:
           NODE_ENV: production
+          # the runner context is only available at step level, not in job-level env
+          DATABASE_FILE: ${{ runner.temp }}/ci.db
 
   pr-rules:
     name: Git flow rules
