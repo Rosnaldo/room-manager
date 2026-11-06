@@ -4,9 +4,13 @@ import { paginationQuerySchema, paginationSchema } from './common';
 
 const name = z.string().trim().min(1).max(100);
 
+const capacity = z.number().int().min(1).max(10_000);
+
+const resourceTag = z.string().trim().toLowerCase().min(1).max(50);
+
 /** Resource tags are normalized (trimmed, lowercased) and de-duplicated, keeping first-seen order. */
 const resources = z
-  .array(z.string().trim().toLowerCase().min(1).max(50))
+  .array(resourceTag)
   .max(50)
   .transform((tags) => [...new Set(tags)]);
 
@@ -15,11 +19,34 @@ const resources = z
 export const createRoomBodySchema = z
   .object({
     name,
+    capacity,
     resources: resources.default([]),
   })
   .strict();
 
-export const listRoomsQuerySchema = paginationQuerySchema;
+/**
+ * Resource filter from the URL: `?resources=projector,tv`, `?resources=projector&resources=tv`, or both.
+ * Normalized like stored tags; blank entries (e.g. a trailing comma) are ignored.
+ */
+const resourcesFilter = z
+  .union([z.string(), z.array(z.string())])
+  .transform((value) =>
+    (Array.isArray(value) ? value : [value])
+      .flatMap((v) => v.split(','))
+      .map((v) => v.trim())
+      .filter(Boolean),
+  )
+  .pipe(resources);
+
+export const listRoomsQuerySchema = paginationQuerySchema
+  .extend({
+    /** rooms holding at least this many people */
+    minCapacity: z.coerce.number().int().min(1).max(10_000).optional(),
+    /** rooms having every listed resource */
+    resources: resourcesFilter.optional(),
+  });
+
+export const listRoomResourcesResponseSchema = z.object({ data: z.array(z.string()) }).strict();
 
 // ---- output ----
 
@@ -27,6 +54,7 @@ export const roomResponseSchema = z
   .object({
     id: z.number().int().positive(),
     name: z.string(),
+    capacity: z.number().int(),
     resources: z.array(z.string()),
   })
   .strict();

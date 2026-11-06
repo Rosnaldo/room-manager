@@ -15,6 +15,13 @@
       "when": 1793918930727,
       "tag": "0001_create_rooms",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793925095521,
+      "tag": "0002_add_room_capacity",
+      "breakpoints": true
     }
   ]
 }

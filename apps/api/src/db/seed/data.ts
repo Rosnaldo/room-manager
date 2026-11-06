@@ -10,9 +10,9 @@ export const seedUsers: (CreateUserBody & { email: string })[] = [
 
 /** Seed rooms. Matched by name (case-insensitive). */
 export const seedRooms: CreateRoomBody[] = [
-  { name: 'Sala Ipê', resources: ['projector', 'whiteboard'] },
-  { name: 'Sala Jacarandá', resources: ['tv', 'videoconference'] },
-  { name: 'Sala Araucária', resources: ['whiteboard'] },
-  { name: 'Sala Cedro', resources: ['tv'] },
-  { name: 'Auditório Pau-Brasil', resources: ['projector', 'microphone', 'videoconference'] },
+  { name: 'Sala Ipê', capacity: 8, resources: ['projector', 'whiteboard'] },
+  { name: 'Sala Jacarandá', capacity: 12, resources: ['tv', 'videoconference'] },
+  { name: 'Sala Araucária', capacity: 4, resources: ['whiteboard'] },
+  { name: 'Sala Cedro', capacity: 6, resources: ['tv'] },
+  { name: 'Auditório Pau-Brasil', capacity: 80, resources: ['projector', 'microphone', 'videoconference'] },
 ];

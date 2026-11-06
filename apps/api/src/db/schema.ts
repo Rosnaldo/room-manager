@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { UserRole } from '@repo/shared-types';
 
 type UserRoleValue = (typeof UserRole)[keyof typeof UserRole];
@@ -26,10 +26,12 @@ export const rooms = sqliteTable(
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
     name: text('name').notNull(),
+    // max number of people; the default only backfills rows that existed before the column
+    capacity: integer('capacity').notNull().default(1),
     // JSON array of resource tags, e.g. ["projector","whiteboard"]; queryable via json_each()
     resources: text('resources', { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
   },
-  (t) => [uniqueIndex('rooms_name_unique').on(sql`lower(${t.name})`)],
+  (t) => [uniqueIndex('rooms_name_unique').on(sql`lower(${t.name})`), index('rooms_capacity_idx').on(t.capacity)],
 );
 
 export type RoomRow = typeof rooms.$inferSelect;

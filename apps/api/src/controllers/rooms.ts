@@ -9,12 +9,15 @@ import type { NoBody, NoParams, NoQuery } from './users';
 
 export interface CreateRoomBody {
   name: string;
+  capacity: number;
   resources: string[];
 }
 
 export interface ListRoomsQuery {
   page: number;
   size: number;
+  minCapacity?: number;
+  resources?: string[];
 }
 
 export type RoomResponse = IRoom;
@@ -24,9 +27,14 @@ export interface ListRoomsResponse {
   pagination: Pagination;
 }
 
+export interface ListRoomResourcesResponse {
+  data: string[];
+}
+
 export interface RoomsController {
   create: RequestHandler<NoParams, RoomResponse, CreateRoomBody, NoQuery>;
   list: RequestHandler<NoParams, ListRoomsResponse, NoBody, ListRoomsQuery>;
+  listResources: RequestHandler<NoParams, ListRoomResourcesResponse, NoBody, NoQuery>;
 }
 
 // ---- handlers ----
@@ -40,6 +48,10 @@ export function createRoomsController(rooms: RoomRepository): RoomsController {
 
     list: (req, res) => {
       res.json(rooms.list(req.query));
+    },
+
+    listResources: (_req, res) => {
+      res.json({ data: rooms.listResources() });
     },
   };
 }
