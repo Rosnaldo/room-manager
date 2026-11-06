@@ -28,6 +28,8 @@ export const rooms = sqliteTable(
     name: text('name').notNull(),
     // max number of people; the default only backfills rows that existed before the column
     maxCapacity: integer('max_capacity').notNull().default(1),
+    // longest reservation, 'HH:mm'; the default is the old fixed limit, for rooms created before the column
+    maxDuration: text('max_duration').notNull().default('04:00'),
     // JSON array of resource tags, e.g. ["projector","whiteboard"]; queryable via json_each()
     resources: text('resources', { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
   },

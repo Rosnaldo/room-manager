@@ -63,10 +63,10 @@ describe('error message translation', () => {
 
   it('translates thrown exceptions with their params', async () => {
     roomFactory.create(ctx.db, { name: 'Sala Azul' });
-    expect((await createRoom({ name: 'Sala Azul', maxCapacity: 2 }).expect(409)).body).toEqual({
+    expect((await createRoom({ name: 'Sala Azul', maxCapacity: 2, maxDuration: '01:00' }).expect(409)).body).toEqual({
       message: 'Já existe uma sala chamada Sala Azul.',
     });
-    expect((await createRoom({ name: 'Sala Azul', maxCapacity: 2 }, 'en').expect(409)).body).toEqual({
+    expect((await createRoom({ name: 'Sala Azul', maxCapacity: 2, maxDuration: '01:00' }, 'en').expect(409)).body).toEqual({
       message: 'room Sala Azul already exists',
     });
   });

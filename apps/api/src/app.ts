@@ -30,11 +30,16 @@ export function createApp(db: DB, options: AppOptions = {}): Express {
   const users = new UserRepository(db);
   const rooms = new RoomRepository(db);
   app.use(createUsersRouter(createUsersController(users)));
-  app.use(createRoomsRouter(createRoomsController(rooms, users)));
+  const reservations = new ReservedRoomRepository(db);
+  app.use(
+    createRoomsRouter(
+      createRoomsController({ rooms, users, reservations, timeZone: properties.timeZone, now: options.now }),
+    ),
+  );
   app.use(
     createReservedRoomsRouter(
       createReservedRoomsController({
-        reservations: new ReservedRoomRepository(db),
+        reservations,
         rooms,
         users,
         timeZone: properties.timeZone,

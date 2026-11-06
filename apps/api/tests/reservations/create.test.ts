@@ -3,7 +3,7 @@ import type { IRoom, IUser } from '@repo/shared-types';
 
 import { useTestApp } from '../helpers/app';
 import { roomFactory } from '../factories/room.factory';
-import { userFactory } from '../factories/user.factory';
+import { adminFactory, userFactory } from '../factories/user.factory';
 import { createReservedRoomBodyFactory, reservedRoomFactory } from '../factories/reserved_room.factory';
 import { createReservedRoomBodySchema, reservedRoomResponseSchema } from '../../src/schemas/reserved_room';
 import { errorResponseSchema } from '../../src/schemas/common';
@@ -50,7 +50,7 @@ describe('POST /reservations/create', () => {
 
     it.each([
       ['14 minutes', '2030-01-20T10:00:00', '2030-01-20T10:14:00', /pelo menos 15 minutos/],
-      ['4 hours and 1 minute', '2030-01-20T10:00:00', '2030-01-20T14:01:00', /no máximo 4 horas/],
+      ["4 hours and 1 minute (the room's default 04:00)", '2030-01-20T10:00:00', '2030-01-20T14:01:00', /nesta sala deve durar no máximo 4h\./],
       ['end equal to start', '2030-01-20T10:00:00', '2030-01-20T10:00:00', /O fim deve ser depois do início/],
       ['end before start', '2030-01-20T11:00:00', '2030-01-20T10:00:00', /O fim deve ser depois do início/],
     ])('rejects %s', async (_case, startAt, endAt, message) => {
@@ -177,5 +177,67 @@ describe('POST /reservations/create conflict message', () => {
       .send({ userId: user.id, roomId: room.id, startAt: '2030-01-21T00:30:00', endAt: '2030-01-21T02:00:00' })
       .expect(409);
     expect(errorResponseSchema.parse(res.body).message).toBe('A sala já está reservada de 20/01/2030 23:00 até 21/01/2030 01:00.');
+  });
+});
+
+describe("POST /reservations/create with the room's own maxDuration", () => {
+  const ctx = useTestApp({ now: () => NOW });
+
+  const reserveIn = async (maxDuration: string, startAt: string, endAt: string, lang?: string) => {
+    const user = userFactory.create(ctx.db);
+    const room = roomFactory.create(ctx.db, { maxDuration });
+    const req = ctx.api.post('/reservations/create');
+    if (lang) req.set('Accept-Language', lang);
+    return req.send({ userId: user.id, roomId: room.id, startAt, endAt });
+  };
+
+  it('rooms created before the field default to 04:00', () => {
+    expect(roomFactory.create(ctx.db).maxDuration).toBe('04:00');
+  });
+
+  it.each([
+    ['01:00', '2030-01-20T10:00:00', '2030-01-20T11:00:00'],
+    ['01:30', '2030-01-20T10:00:00', '2030-01-20T11:30:00'],
+    ['08:00', '2030-01-20T09:00:00', '2030-01-20T17:00:00'],
+    ['00:15', '2030-01-20T10:00:00', '2030-01-20T10:15:00'],
+  ])('accepts exactly the maximum of a %s room', async (maxDuration, startAt, endAt) => {
+    expect((await reserveIn(maxDuration, startAt, endAt)).status).toBe(201);
+  });
+
+  it.each([
+    ['01:00', '2030-01-20T10:00:00', '2030-01-20T11:01:00', 'A reserva nesta sala deve durar no máximo 1h.'],
+    ['01:30', '2030-01-20T10:00:00', '2030-01-20T11:31:00', 'A reserva nesta sala deve durar no máximo 1h30min.'],
+    ['00:45', '2030-01-20T10:00:00', '2030-01-20T10:46:00', 'A reserva nesta sala deve durar no máximo 45min.'],
+  ])('rejects one minute over a %s room', async (maxDuration, startAt, endAt, message) => {
+    const res = await reserveIn(maxDuration, startAt, endAt);
+    expect(res.status).toBe(400);
+    expect(errorResponseSchema.parse(res.body).details).toEqual({ endAt: [message] });
+  });
+
+  it('lets a long room go past the old 4-hour limit', async () => {
+    expect((await reserveIn('08:00', '2030-01-20T09:00:00', '2030-01-20T15:00:00')).status).toBe(201);
+  });
+
+  it('keeps the 15-minute minimum for every room', async () => {
+    const res = await reserveIn('08:00', '2030-01-20T10:00:00', '2030-01-20T10:10:00');
+    expect(res.status).toBe(400);
+    expect(errorResponseSchema.parse(res.body).details?.endAt).toEqual(['A reserva deve durar pelo menos 15 minutos.']);
+  });
+
+  it('translates the limit with its value', async () => {
+    const res = await reserveIn('02:00', '2030-01-20T10:00:00', '2030-01-20T13:00:00', 'en');
+    expect(errorResponseSchema.parse(res.body).details).toEqual({ endAt: ['reservation must last at most 2h in this room'] });
+  });
+
+  it("applies the room's current limit: after lowering it, longer new bookings are refused", async () => {
+    const user = userFactory.create(ctx.db);
+    const room = roomFactory.create(ctx.db, { maxDuration: '04:00' });
+    // fits the lower limit below, so lowering is allowed
+    await ctx.api.post('/reservations/create').send({ userId: user.id, roomId: room.id, startAt: '2030-01-20T10:00:00', endAt: '2030-01-20T11:00:00' }).expect(201);
+
+    const admin = adminFactory.create(ctx.db);
+    await ctx.api.patch(`/rooms/edit/${room.id}`).send({ userId: admin.id, maxDuration: '01:00' }).expect(200);
+
+    await ctx.api.post('/reservations/create').send({ userId: user.id, roomId: room.id, startAt: '2030-01-21T10:00:00', endAt: '2030-01-21T13:00:00' }).expect(400);
   });
 });

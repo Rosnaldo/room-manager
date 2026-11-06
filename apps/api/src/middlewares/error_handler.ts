@@ -3,7 +3,7 @@ import type { ErrorRequestHandler } from 'express';
 import logger from '../logger';
 import { resolveLocale, translate } from '../i18n';
 import { zodDetails } from '../i18n/zod';
-import { HttpException, type ErrorDetails } from '../exceptions/http';
+import { HttpException, type TranslatedDetails } from '../exceptions/http';
 import { BadRequestException } from '../exceptions/bad_request';
 
 /** Errors body-parser raises before our code runs (malformed JSON, …): their own messages are technical. */
@@ -23,11 +23,16 @@ export const errorHandler: ErrorRequestHandler = (err: unknown, req, res, _next)
   const locale = resolveLocale(req.headers['accept-language']);
 
   if (err instanceof HttpException && err.status < 500) {
-    let details: ErrorDetails | undefined;
+    let details: TranslatedDetails | undefined;
     if (err instanceof BadRequestException && err.zodError) {
       details = zodDetails(err.zodError, locale);
     } else if (err.details) {
-      details = Object.fromEntries(Object.entries(err.details).map(([k, msgs]) => [k, msgs.map((m) => translate(locale, m))]));
+      details = Object.fromEntries(
+        Object.entries(err.details).map(([field, msgs]) => [
+          field,
+          msgs.map((m) => (typeof m === 'string' ? translate(locale, m) : translate(locale, m.template, m.params))),
+        ]),
+      );
     }
     res.status(err.status).json({ message: translate(locale, err.template, err.params), ...(details && { details }) });
     return;

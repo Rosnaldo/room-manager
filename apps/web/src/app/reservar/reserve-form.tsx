@@ -1,9 +1,10 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import type { IRoom } from '@repo/shared-types';
 
 import { reserveRoom, type ReserveState } from './actions';
+import { formatDuration } from '@/lib/datetime';
 
 const field = 'rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900';
 
@@ -30,6 +31,9 @@ export function ReserveForm({
 }) {
   const [state, action, pending] = useActionState<ReserveState, FormData>(reserveRoom, {});
   const values = state.values;
+  // the duration limit shown below follows the chosen room
+  const [selectedId, setSelectedId] = useState(values?.roomId ?? (roomId ? String(roomId) : ''));
+  const selected = rooms.find((r) => String(r.id) === selectedId);
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -39,6 +43,7 @@ export function ReserveForm({
           name="roomId"
           required
           defaultValue={values?.roomId ?? roomId ?? ''}
+          onChange={(e) => setSelectedId(e.currentTarget.value)}
           className={field}
         >
           <option value="" disabled>
@@ -93,7 +98,11 @@ export function ReserveForm({
         </label>
       </div>
 
-      <p className="text-xs text-neutral-500">De 15 minutos a 4 horas, sem sobrepor outra reserva da sala.</p>
+      <p className="text-xs text-neutral-500">
+        {selected
+          ? `De 15 minutos a ${formatDuration(selected.maxDuration)} nesta sala, sem sobrepor outra reserva.`
+          : 'A partir de 15 minutos; o máximo depende da sala.'}
+      </p>
 
       {state.error && (
         <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">

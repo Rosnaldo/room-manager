@@ -50,3 +50,10 @@ export function formatDate(date: string): string {
   const [y, m, d] = date.slice(0, 10).split('-');
   return `${d}/${m}/${y}`;
 }
+
+/** A room's `HH:mm` maxDuration as a label: "04:00" → "4h", "01:30" → "1h30min", "00:45" → "45min". */
+export function formatDuration(hhmm: string): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  if (!h) return `${m}min`;
+  return m ? `${h}h${String(m).padStart(2, '0')}min` : `${h}h`;
+}

@@ -24,6 +24,8 @@ export interface IRoom {
     id: number;
     name: string;
     maxCapacity: number;
+    /** longest reservation allowed in this room, `HH:mm` (e.g. "04:00") */
+    maxDuration: string;
     resources: string[];
 }
 

@@ -4,17 +4,25 @@ import Link from 'next/link';
 import { useActionState } from 'react';
 import type { IRoom } from '@repo/shared-types';
 
-import { updateRoom, type RoomFormState } from '../../actions';
+import { createRoom, updateRoom, type RoomFormState } from './actions';
 
 const field = 'rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900';
 
-export function RoomForm({ room }: { room: IRoom }) {
-  const [state, action, pending] = useActionState<RoomFormState, FormData>(updateRoom.bind(null, room.id), {});
-  const values = state.values ?? {
-    name: room.name,
-    maxCapacity: String(room.maxCapacity),
-    resources: room.resources.join(', '),
-  };
+/** Edits `room`, or creates a new one without it. */
+export function RoomForm({ room }: { room?: IRoom }) {
+  const [state, action, pending] = useActionState<RoomFormState, FormData>(
+    room ? updateRoom.bind(null, room.id) : createRoom,
+    {},
+  );
+  const values = state.values ??
+    (room
+      ? {
+          name: room.name,
+          maxCapacity: String(room.maxCapacity),
+          maxDuration: room.maxDuration,
+          resources: room.resources.join(', '),
+        }
+      : { name: '', maxCapacity: '', maxDuration: '04:00', resources: '' });
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -26,6 +34,21 @@ export function RoomForm({ room }: { room: IRoom }) {
       <label className="flex flex-col gap-1 text-sm">
         Capacidade máxima (pessoas)
         <input type="number" name="maxCapacity" required min={1} defaultValue={values.maxCapacity} className={field} />
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm">
+        Duração máxima da reserva
+        {/* text, not type="time": a time input shows AM/PM in some browsers, and this is a duration */}
+        <input
+          name="maxDuration"
+          required
+          inputMode="numeric"
+          pattern="[0-2][0-9]:[0-5][0-9]"
+          placeholder="04:00"
+          defaultValue={values.maxDuration}
+          className={field}
+        />
+        <span className="text-xs text-neutral-500">Horas e minutos (HH:mm), de 00:15 a 23:59.</span>
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
@@ -46,7 +69,7 @@ export function RoomForm({ room }: { room: IRoom }) {
           disabled={pending}
           className="rounded bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
         >
-          {pending ? 'Salvando…' : 'Salvar'}
+          {pending ? 'Salvando…' : room ? 'Salvar' : 'Criar sala'}
         </button>
         <Link href="/" className="text-sm underline">
           Cancelar

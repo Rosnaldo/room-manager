@@ -1,7 +1,13 @@
 import { interpolate, type MessageParams } from '../i18n';
 
-/** Field → messages; each message is an English template, translated when the response is sent. */
-export type ErrorDetails = Record<string, string[]>;
+/** An English template, or one with `{placeholders}` and their values. Translated when the response is sent. */
+export type DetailMessage = string | { template: string; params: MessageParams };
+
+/** Field → messages. */
+export type ErrorDetails = Record<string, DetailMessage[]>;
+
+/** Field → messages as sent to the client (already translated). */
+export type TranslatedDetails = Record<string, string[]>;
 
 /**
  * Base for the errors our code throws. `message` is the English text (what gets logged);

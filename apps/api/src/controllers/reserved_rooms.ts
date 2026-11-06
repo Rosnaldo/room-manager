@@ -8,7 +8,8 @@ import { BadRequestException } from '../exceptions/bad_request';
 import { ConflictException } from '../exceptions/conflict';
 import { NotFoundException } from '../exceptions/not_found';
 import { ForbiddenException } from '../exceptions/forbidden';
-import { formatInTimeZone } from '../lib/local_datetime';
+import { formatInTimeZone, minutesBetween } from '../lib/local_datetime';
+import { durationToMinutes, formatMinutes } from '../lib/duration';
 import type { NoBody, NoParams, NoQuery } from './users';
 
 // ---- declared request/response contracts (tests assert the zod schemas infer exactly these) ----
@@ -88,10 +89,20 @@ export function createReservedRoomsController(deps: ReservedRoomsDeps): Reserved
       const { userId, roomId, startAt, endAt } = req.body;
 
       if (!users.findById(userId)) throw new NotFoundException('user {id} not found', { id: userId });
-      if (!rooms.findById(roomId)) throw new NotFoundException('room {id} not found', { id: roomId });
+      const room = rooms.findById(roomId);
+      if (!room) throw new NotFoundException('room {id} not found', { id: roomId });
 
       if (startAt < formatInTimeZone(now(), timeZone)) {
         throw new BadRequestException('invalid request body', { details: { startAt: ['must not be in the past'] } });
+      }
+
+      const maxMinutes = durationToMinutes(room.maxDuration)!;
+      if (minutesBetween(startAt, endAt) > maxMinutes) {
+        throw new BadRequestException('invalid request body', {
+          details: {
+            endAt: [{ template: 'reservation must last at most {max} in this room', params: { max: formatMinutes(maxMinutes) } }],
+          },
+        });
       }
 
       const result = reservations.createIfFree({ userId, roomId, startAt, endAt });

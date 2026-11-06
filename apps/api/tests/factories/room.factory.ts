@@ -13,5 +13,5 @@ export const roomFactory = new Factory<NewRoomRow, IRoom>({
 
 /** Request payloads (not persisted). userId has no sensible default: pass the caller's. */
 export const createRoomBodyFactory = new Factory<CreateRoomBody>({
-  defaults: (n) => ({ userId: 0, name: `New Room ${n}`, maxCapacity: 10, resources: ['projector', 'tv'] }),
+  defaults: (n) => ({ userId: 0, name: `New Room ${n}`, maxCapacity: 10, maxDuration: '02:00', resources: ['projector', 'tv'] }),
 });
