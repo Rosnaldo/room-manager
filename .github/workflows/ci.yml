@@ -91,7 +91,7 @@ jobs:
           HEAD: ${{ github.head_ref }}
           BASE: ${{ github.base_ref }}
         run: |
-          feature='^feature/[a-zA-Z0-9-]+)$'
+          feature='^feature/[a-zA-Z0-9-]+$'
           hotfix='^hotfix/[a-z0-9.-]+$'
           release='^release/[0-9]+\.[0-9]+\.[0-9]+$'
           ok=false
@@ -101,7 +101,7 @@ jobs:
           esac
           if [ "$ok" != true ]; then
             echo "::error::'$HEAD' -> '$BASE' is not allowed."
-            echo "develop accepts feature/SALA-<n>[-<name>] or feature/<name>, hotfix/<name> (<name>: lowercase letters, digits, hyphens; hotfix also dots), release/<x.y.z> (merge-backs)"
+            echo "develop accepts feature/<name> (letters, digits, hyphens), hotfix/<name> (lowercase letters, digits, dots, hyphens), release/<x.y.z> (merge-backs)"
             echo "main accepts hotfix/<name>, release/<x.y.z>"
             exit 1
           fi
