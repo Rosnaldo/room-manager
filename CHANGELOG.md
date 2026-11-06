@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-06
+
 ### Added
 
 - **SALA-6** — Each room has its own maximum reservation duration.
@@ -64,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GET /rooms/resources` lists the resource tags in use.
   - Web: home page lists rooms, with filters kept in the URL.
 
-[Unreleased]: https://github.com/Rosnaldo/room-manager/compare/v1.0.1...develop
+[Unreleased]: https://github.com/Rosnaldo/room-manager/compare/v1.1.0...develop
+[1.1.0]: https://github.com/Rosnaldo/room-manager/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/Rosnaldo/room-manager/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Rosnaldo/room-manager/releases/tag/v1.0.0
