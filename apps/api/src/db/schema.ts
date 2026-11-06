@@ -36,3 +36,24 @@ export const rooms = sqliteTable(
 
 export type RoomRow = typeof rooms.$inferSelect;
 export type NewRoomRow = typeof rooms.$inferInsert;
+
+export const reservedRooms = sqliteTable(
+  'reserved_rooms',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    roomId: integer('room_id')
+      .notNull()
+      .references(() => rooms.id, { onDelete: 'cascade' }),
+    // local wall-clock time 'YYYY-MM-DDTHH:mm:ss': fixed width, so text comparison is chronological
+    startAt: text('start_at').notNull(),
+    endAt: text('end_at').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch('subsec') * 1000)`),
+  },
+  (t) => [index('reserved_rooms_room_start_idx').on(t.roomId, t.startAt)],
+);
+
+export type ReservedRoomRow = typeof reservedRooms.$inferSelect;
+export type NewReservedRoomRow = typeof reservedRooms.$inferInsert;

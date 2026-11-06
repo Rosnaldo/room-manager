@@ -129,6 +129,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   ))}
                 </ul>
               )}
+              <Link
+                href={`/reservar?roomId=${room.id}`}
+                className="mt-4 inline-block rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Reservar
+              </Link>
             </li>
           ))}
         </ul>

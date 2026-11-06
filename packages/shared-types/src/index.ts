@@ -26,3 +26,12 @@ export interface IRoom {
     maxCapacity: number;
     resources: string[];
 }
+
+/** A room booked by a user. Dates are local wall-clock time, `YYYY-MM-DDTHH:mm:ss`, no timezone. */
+export interface IReservedRoom {
+    id: number;
+    userId: number;
+    roomId: number;
+    startAt: string;
+    endAt: string;
+}

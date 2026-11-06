@@ -1,7 +1,8 @@
-export class UnauthorizedException extends Error {
-  status = 401;
+import type { MessageParams } from '../i18n';
+import { HttpException } from './http';
 
-  constructor(message: string) {
-    super(message);
+export class UnauthorizedException extends HttpException {
+  constructor(template: string, params?: MessageParams) {
+    super(401, template, params);
   }
 }

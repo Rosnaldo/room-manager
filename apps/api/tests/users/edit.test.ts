@@ -33,7 +33,7 @@ describe('PATCH /users/edit/:id', () => {
     await ctx.api.patch(`/users/edit/${user.id}`).send({ email: user.email }).expect(200);
 
     const res = await ctx.api.patch(`/users/edit/${user.id}`).send({ email: other.email }).expect(409);
-    expect(errorResponseSchema.parse(res.body).message).toMatch(/already in use/);
+    expect(errorResponseSchema.parse(res.body).message).toMatch(/já está em uso/);
   });
 
   it('returns 404 for a missing user', async () => {
@@ -52,12 +52,12 @@ describe('PATCH /users/edit/:id', () => {
     const user = userFactory.create(ctx.db);
     const res = await ctx.api.patch(`/users/edit/${user.id}`).send(body).expect(400);
     const error = errorResponseSchema.parse(res.body);
-    expect(error.message).toBe('invalid request body');
+    expect(error.message).toBe('Dados inválidos.');
     expect(error.details).toHaveProperty(field);
   });
 
   it('returns 400 for an invalid id before checking the body', async () => {
     const res = await ctx.api.patch('/users/edit/abc').send({}).expect(400);
-    expect(errorResponseSchema.parse(res.body).message).toBe('invalid path params');
+    expect(errorResponseSchema.parse(res.body).message).toBe('Parâmetros da URL inválidos.');
   });
 });
