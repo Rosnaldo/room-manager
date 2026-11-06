@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import type { IReservedRoom } from '@repo/shared-types';
+import type { IReservedRoom, Pagination } from '@repo/shared-types';
 
 import type { ReservedRoomRepository } from '../repositories/reserved_room';
 import type { RoomRepository } from '../repositories/room';
@@ -7,8 +7,9 @@ import type { UserRepository } from '../repositories/user';
 import { BadRequestException } from '../exceptions/bad_request';
 import { ConflictException } from '../exceptions/conflict';
 import { NotFoundException } from '../exceptions/not_found';
+import { ForbiddenException } from '../exceptions/forbidden';
 import { formatInTimeZone } from '../lib/local_datetime';
-import type { NoParams, NoQuery } from './users';
+import type { NoBody, NoParams, NoQuery } from './users';
 
 // ---- declared request/response contracts (tests assert the zod schemas infer exactly these) ----
 
@@ -19,10 +20,28 @@ export interface CreateReservedRoomBody {
   endAt: string;
 }
 
+export interface ListReservedRoomsQuery {
+  page: number;
+  size: number;
+}
+
+export interface ReservedRoomIdParams {
+  id: number;
+}
+
 export type ReservedRoomResponse = IReservedRoom;
+
+export interface ListReservedRoomsResponse {
+  data: ReservedRoomResponse[];
+  pagination: Pagination;
+}
 
 export interface ReservedRoomsController {
   create: RequestHandler<NoParams, ReservedRoomResponse, CreateReservedRoomBody, NoQuery>;
+  /** the caller's own reservations only; needs req.currentUser */
+  list: RequestHandler<NoParams, ListReservedRoomsResponse, NoBody, ListReservedRoomsQuery>;
+  /** by its owner only; needs req.currentUser */
+  delete: RequestHandler<ReservedRoomIdParams, void, NoBody, NoQuery>;
 }
 
 export interface ReservedRoomsDeps {
@@ -75,6 +94,22 @@ export function createReservedRoomsController(deps: ReservedRoomsDeps): Reserved
         throw conflictError(result.conflict.startAt, result.conflict.endAt);
       }
       res.status(201).json(result.reservation);
+    },
+
+    list: (req, res) => {
+      res.json(reservations.listByUser({ userId: req.currentUser.id, page: req.query.page, size: req.query.size }));
+    },
+
+    delete: (req, res) => {
+      const reservation = reservations.findById(req.params.id);
+      if (!reservation) throw new NotFoundException('reservation {id} not found', { id: req.params.id });
+
+      if (reservation.userId !== req.currentUser.id) {
+        throw new ForbiddenException('only the owner can cancel this reservation');
+      }
+
+      reservations.delete(reservation.id);
+      res.status(204).end();
     },
   };
 }
