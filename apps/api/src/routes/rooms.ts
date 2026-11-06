@@ -10,6 +10,7 @@ export function createRoomsRouter(controller: RoomsController): Router {
 
   router.post('/rooms/create', validate({ params: noParams, query: noQuery, body: createRoomBodySchema }), controller.create);
   router.get('/rooms/list', validate({ params: noParams, query: listRoomsQuerySchema }), controller.list);
+  router.get('/rooms/resources', validate({ params: noParams, query: noQuery }), controller.listResources);
 
   return router;
 }

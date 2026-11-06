@@ -16,7 +16,7 @@ describe('POST /rooms/create', () => {
     const res = await ctx.api.post('/rooms/create').send(body).expect(201);
 
     const room = roomResponseSchema.parse(res.body);
-    expect(room).toEqual({ id: expect.any(Number), name: body.name, resources: body.resources });
+    expect(room).toEqual({ id: expect.any(Number), name: body.name, maxCapacity: body.maxCapacity, resources: body.resources });
     expect(new RoomRepository(ctx.db).findById(room.id)).toEqual(room);
   });
 
@@ -29,7 +29,7 @@ describe('POST /rooms/create', () => {
   });
 
   it('defaults resources to an empty array', async () => {
-    const res = await ctx.api.post('/rooms/create').send({ name: 'Bare' }).expect(201);
+    const res = await ctx.api.post('/rooms/create').send({ name: 'Bare', maxCapacity: 2 }).expect(201);
     expect(roomResponseSchema.parse(res.body).resources).toEqual([]);
   });
 
@@ -44,6 +44,11 @@ describe('POST /rooms/create', () => {
     ['missing name', { name: undefined }, 'name'],
     ['blank name', { name: '   ' }, 'name'],
     ['name too long', { name: 'x'.repeat(101) }, 'name'],
+    ['missing capacity', { maxCapacity: undefined }, 'maxCapacity'],
+    ['zero capacity', { maxCapacity: 0 }, 'maxCapacity'],
+    ['fractional capacity', { maxCapacity: 2.5 }, 'maxCapacity'],
+    ['capacity as a string', { maxCapacity: '10' }, 'maxCapacity'],
+    ['capacity too large', { maxCapacity: 10_001 }, 'maxCapacity'],
     ['resources not an array', { resources: 'projector' }, 'resources'],
     ['blank resource', { resources: ['projector', ' '] }, 'resources'],
     ['non-string resource', { resources: [1] }, 'resources'],

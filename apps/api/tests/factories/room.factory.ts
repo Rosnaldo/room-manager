@@ -7,11 +7,11 @@ import { Factory } from './factory';
 
 /** Persisted room entity. Any column (incl. id) can be overridden. */
 export const roomFactory = new Factory<NewRoomRow, IRoom>({
-  defaults: (n) => ({ name: `Room ${n}`, resources: ['whiteboard'] }),
+  defaults: (n) => ({ name: `Room ${n}`, maxCapacity: 6, resources: ['whiteboard'] }),
   persist: (db, attrs) => new RoomRepository(db).create(attrs),
 });
 
 /** Request payloads (not persisted). */
 export const createRoomBodyFactory = new Factory<CreateRoomBody>({
-  defaults: (n) => ({ name: `New Room ${n}`, resources: ['projector', 'tv'] }),
+  defaults: (n) => ({ name: `New Room ${n}`, maxCapacity: 10, resources: ['projector', 'tv'] }),
 });

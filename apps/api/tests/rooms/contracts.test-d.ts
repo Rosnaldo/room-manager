@@ -8,6 +8,7 @@ import type { IRoom } from '@repo/shared-types';
 
 import type {
   CreateRoomBody,
+  ListRoomResourcesResponse,
   ListRoomsQuery,
   ListRoomsResponse,
   RoomResponse,
@@ -17,6 +18,7 @@ import type { NoParams, NoQuery } from '../../src/controllers/users';
 import {
   type createRoomBodySchema,
   type listRoomsQuerySchema,
+  type listRoomResourcesResponseSchema,
   type listRoomsResponseSchema,
   type roomResponseSchema,
 } from '../../src/schemas/room';
@@ -31,7 +33,7 @@ describe('zod input schemas infer the controller request types', () => {
     expectTypeOf<z.output<typeof emptySchema>>().toEqualTypeOf<C['params']>();
     expectTypeOf<z.output<typeof emptySchema>>().toEqualTypeOf<C['query']>();
     // resources may be omitted by clients; the schema defaults it
-    expectTypeOf<z.input<typeof createRoomBodySchema>>().toEqualTypeOf<{ name: string; resources?: string[] }>();
+    expectTypeOf<z.input<typeof createRoomBodySchema>>().toEqualTypeOf<{ name: string; maxCapacity: number; resources?: string[] }>();
   });
 
   it('GET /rooms/list', () => {
@@ -40,6 +42,14 @@ describe('zod input schemas infer the controller request types', () => {
     expectTypeOf<z.output<typeof listRoomsQuerySchema>>().toEqualTypeOf<ListRoomsQuery>();
     expectTypeOf<C['params']>().toEqualTypeOf<NoParams>();
     expectTypeOf<Contract<RoomsController['create']>['query']>().toEqualTypeOf<NoQuery>();
+    // filters arrive as strings (or repeated keys) in the URL
+    expectTypeOf<z.input<typeof listRoomsQuerySchema>['resources']>().toEqualTypeOf<string | string[] | undefined>();
+  });
+
+  it('GET /rooms/resources', () => {
+    type C = Contract<RoomsController['listResources']>;
+    expectTypeOf<C['params']>().toEqualTypeOf<NoParams>();
+    expectTypeOf<C['query']>().toEqualTypeOf<NoQuery>();
   });
 });
 
@@ -53,6 +63,11 @@ describe('zod output schemas match the controller response types', () => {
   it('list response', () => {
     expectTypeOf<z.output<typeof listRoomsResponseSchema>>().toEqualTypeOf<ListRoomsResponse>();
     expectTypeOf<Contract<RoomsController['list']>['response']>().toEqualTypeOf<ListRoomsResponse>();
+  });
+
+  it('resources response', () => {
+    expectTypeOf<z.output<typeof listRoomResourcesResponseSchema>>().toEqualTypeOf<ListRoomResourcesResponse>();
+    expectTypeOf<Contract<RoomsController['listResources']>['response']>().toEqualTypeOf<ListRoomResourcesResponse>();
   });
 
   it('wire format (schema input) is the JSON-serialized response', () => {

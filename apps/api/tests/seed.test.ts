@@ -19,6 +19,7 @@ describe('seed', () => {
 
     const rooms = new RoomRepository(db).list({ page: 1, size: 100 }).data;
     expect(rooms).toHaveLength(5);
+    rooms.forEach((r) => expect(r.maxCapacity).toBeGreaterThan(0));
 
     // seeded rows satisfy the same output contracts as API-created ones
     users.forEach((u) => userResponseSchema.parse(JSON.parse(JSON.stringify(u))));

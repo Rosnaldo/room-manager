@@ -1,16 +1,29 @@
-import { count, eq, sql } from 'drizzle-orm';
+import { and, asc, count, eq, gte, sql, type SQL } from 'drizzle-orm';
 import type { IRoom, Pagination } from '@repo/shared-types';
 
 import type { DB } from '../db/connection';
 import { rooms, type NewRoomRow, type RoomRow } from '../db/schema';
 
 function toRoom(row: RoomRow): IRoom {
-  return { id: row.id, name: row.name, resources: row.resources };
+  return { id: row.id, name: row.name, maxCapacity: row.maxCapacity, resources: row.resources };
 }
 
 export interface ListRoomsOptions {
   page: number;
   size: number;
+  /** rooms whose maxCapacity is at least this many people */
+  capacity?: number;
+  /** rooms having every one of these resource tags */
+  resources?: string[];
+}
+
+function listFilter(opts: ListRoomsOptions): SQL | undefined {
+  return and(
+    opts.capacity !== undefined ? gte(rooms.maxCapacity, opts.capacity) : undefined,
+    ...(opts.resources ?? []).map(
+      (tag) => sql`exists (select 1 from json_each(${rooms.resources}) where json_each.value = ${tag})`,
+    ),
+  );
 }
 
 export class RoomRepository {
@@ -28,10 +41,12 @@ export class RoomRepository {
   }
 
   list(opts: ListRoomsOptions): { data: IRoom[]; pagination: Pagination } {
-    const { total } = this.db.select({ total: count() }).from(rooms).get()!;
+    const where = listFilter(opts);
+    const { total } = this.db.select({ total: count() }).from(rooms).where(where).get()!;
     const rows = this.db
       .select()
       .from(rooms)
+      .where(where)
       .orderBy(rooms.name, rooms.id)
       .limit(opts.size)
       .offset((opts.page - 1) * opts.size)
@@ -46,6 +61,17 @@ export class RoomRepository {
         size: opts.size,
       },
     };
+  }
+
+  /** Every distinct resource tag in use, alphabetically (feeds the list filter). */
+  listResources(): string[] {
+    return this.db
+      .select({ tag: sql<string>`json_each.value` })
+      .from(sql`${rooms}, json_each(${rooms.resources})`)
+      .groupBy(sql`json_each.value`)
+      .orderBy(asc(sql`json_each.value`))
+      .all()
+      .map((r) => r.tag);
   }
 
   create(data: NewRoomRow): IRoom {
