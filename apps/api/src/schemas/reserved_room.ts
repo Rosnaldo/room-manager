@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { isLocalDateTime, minutesBetween } from '../lib/local_datetime';
+import { endsWithinHours, isWeekday, startsWithinHours } from '../lib/business_hours';
 import { idParamsSchema, paginationQuerySchema, paginationSchema } from './common';
 
 export const MIN_RESERVATION_MINUTES = 15;
@@ -15,8 +16,9 @@ export const localDateTimeSchema = z
 // ---- input ----
 
 /**
- * Shape and minimum-duration rules. The room's maximum duration, "not in the past" and "no overlap"
- * need the database or the clock, so the controller checks those.
+ * Shape, minimum-duration and business-hours rules (weekdays, 08:00–20:00). The room's maximum
+ * duration, "not in the past" and "no overlap" need the database or the clock, so the controller
+ * checks those.
  */
 export const createReservedRoomBodySchema = z
   .object({
@@ -36,6 +38,17 @@ export const createReservedRoomBodySchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservation must last at least 15 minutes' });
     }
     // the maximum depends on the room (its maxDuration): the controller checks it
+
+    // SALA-5: only on weekdays, from 08:00 to 20:00
+    if (!isWeekday(body.startAt)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['startAt'], message: 'reservations are only allowed on weekdays (Monday to Friday)' });
+    }
+    if (!startsWithinHours(body.startAt)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['startAt'], message: 'reservations must be between 08:00 and 20:00' });
+    }
+    if (minutes > 0 && !endsWithinHours(body.startAt, body.endAt)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservations must be between 08:00 and 20:00' });
+    }
   });
 
 /** `userId`: whose reservations. In the query string, because a GET request can't carry a body. */

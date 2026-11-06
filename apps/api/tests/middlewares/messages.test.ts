@@ -51,7 +51,7 @@ describe('error message translation', () => {
   });
 
   it("translates a schema's own message through the catalog", async () => {
-    const body = { userId: 1, roomId: 1, startAt: '2030-01-20T10:00', endAt: '2030-01-20T11:00:00' };
+    const body = { userId: 1, roomId: 1, startAt: '2030-01-21T10:00', endAt: '2030-01-21T11:00:00' };
     const ptRes = errorResponseSchema.parse((await ctx.api.post('/reservations/create').send(body).expect(400)).body);
     expect(ptRes.details?.startAt).toEqual(['Data e hora inválidas. Use o formato AAAA-MM-DDTHH:mm:ss.']);
 

@@ -34,6 +34,8 @@ export const pt: Record<string, string> = {
   'must be after startAt': 'O fim deve ser depois do início.',
   'reservation must last at least 15 minutes': 'A reserva deve durar pelo menos 15 minutos.',
   'reservation must last at most {max} in this room': 'A reserva nesta sala deve durar no máximo {max}.',
+  'reservations are only allowed on weekdays (Monday to Friday)': 'Reservas só podem ser feitas em dias úteis (segunda a sexta).',
+  'reservations must be between 08:00 and 20:00': 'Reservas só podem acontecer das 08:00 às 20:00.',
   'must not be in the past': 'O início não pode estar no passado.',
   'room is already reserved from {start} to {end} on {date}': 'A sala já está reservada das {start} às {end} de {date}.',
   'room is already reserved from {startDate} {start} to {endDate} {end}':
