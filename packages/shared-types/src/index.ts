@@ -23,6 +23,6 @@ export interface Pagination {
 export interface IRoom {
     id: number;
     name: string;
-    capacity: number;
+    maxCapacity: number;
     resources: string[];
 }

@@ -42,9 +42,9 @@ describe('GET /rooms/list', () => {
 
   describe('filters', () => {
     const seedRooms = () => ({
-      small: roomFactory.create(ctx.db, { name: 'A small', capacity: 4, resources: ['whiteboard'] }),
-      medium: roomFactory.create(ctx.db, { name: 'B medium', capacity: 10, resources: ['projector', 'whiteboard'] }),
-      large: roomFactory.create(ctx.db, { name: 'C large', capacity: 40, resources: ['projector', 'microphone'] }),
+      small: roomFactory.create(ctx.db, { name: 'A small', maxCapacity: 4, resources: ['whiteboard'] }),
+      medium: roomFactory.create(ctx.db, { name: 'B medium', maxCapacity: 10, resources: ['projector', 'whiteboard'] }),
+      large: roomFactory.create(ctx.db, { name: 'C large', maxCapacity: 40, resources: ['projector', 'microphone'] }),
     });
     const list = async (qs: string) => listRoomsResponseSchema.parse((await ctx.api.get(`/rooms/list?${qs}`).expect(200)).body);
 

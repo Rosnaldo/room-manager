@@ -4,7 +4,7 @@ import { paginationQuerySchema, paginationSchema } from './common';
 
 const name = z.string().trim().min(1).max(100);
 
-const capacity = z.number().int().min(1).max(10_000);
+const maxCapacity = z.number().int().min(1).max(10_000);
 
 const resourceTag = z.string().trim().toLowerCase().min(1).max(50);
 
@@ -19,7 +19,7 @@ const resources = z
 export const createRoomBodySchema = z
   .object({
     name,
-    capacity,
+    maxCapacity,
     resources: resources.default([]),
   })
   .strict();
@@ -54,7 +54,7 @@ export const roomResponseSchema = z
   .object({
     id: z.number().int().positive(),
     name: z.string(),
-    capacity: z.number().int(),
+    maxCapacity: z.number().int(),
     resources: z.array(z.string()),
   })
   .strict();

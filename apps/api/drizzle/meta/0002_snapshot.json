@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a453c74a-8f68-40c9-ad69-55acca8a7287",
+  "id": "7e7667f5-a883-45e7-953c-4cecf27b1e25",
   "prevId": "7cbc901f-5de0-4f5b-a33e-9363f8566836",
   "tables": {
     "rooms": {
@@ -21,8 +21,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "capacity": {
-          "name": "capacity",
+        "max_capacity": {
+          "name": "max_capacity",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -46,10 +46,10 @@
           ],
           "isUnique": true
         },
-        "rooms_capacity_idx": {
-          "name": "rooms_capacity_idx",
+        "rooms_max_capacity_idx": {
+          "name": "rooms_max_capacity_idx",
           "columns": [
-            "capacity"
+            "max_capacity"
           ],
           "isUnique": false
         }

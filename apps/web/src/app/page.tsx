@@ -118,7 +118,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <li key={room.id} className="rounded border border-neutral-200 p-4 dark:border-neutral-800">
               <h2 className="font-medium">{room.name}</h2>
               <p className="mt-1 text-sm text-neutral-500">
-                {room.capacity} {room.capacity === 1 ? 'pessoa' : 'pessoas'}
+                {room.maxCapacity} {room.maxCapacity === 1 ? 'pessoa' : 'pessoas'}
               </p>
               {room.resources.length > 0 && (
                 <ul className="mt-3 flex flex-wrap gap-1.5">

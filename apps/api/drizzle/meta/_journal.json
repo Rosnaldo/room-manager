@@ -19,8 +19,8 @@
     {
       "idx": 2,
       "version": "6",
-      "when": 1793925095521,
-      "tag": "0002_add_room_capacity",
+      "when": 1793927466700,
+      "tag": "0002_add_room_max_capacity",
       "breakpoints": true
     }
   ]

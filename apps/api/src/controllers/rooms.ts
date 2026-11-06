@@ -9,7 +9,7 @@ import type { NoBody, NoParams, NoQuery } from './users';
 
 export interface CreateRoomBody {
   name: string;
-  capacity: number;
+  maxCapacity: number;
   resources: string[];
 }
 

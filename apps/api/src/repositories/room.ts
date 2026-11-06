@@ -5,7 +5,7 @@ import type { DB } from '../db/connection';
 import { rooms, type NewRoomRow, type RoomRow } from '../db/schema';
 
 function toRoom(row: RoomRow): IRoom {
-  return { id: row.id, name: row.name, capacity: row.capacity, resources: row.resources };
+  return { id: row.id, name: row.name, maxCapacity: row.maxCapacity, resources: row.resources };
 }
 
 export interface ListRoomsOptions {
@@ -19,7 +19,7 @@ export interface ListRoomsOptions {
 
 function listFilter(opts: ListRoomsOptions): SQL | undefined {
   return and(
-    opts.minCapacity !== undefined ? gte(rooms.capacity, opts.minCapacity) : undefined,
+    opts.minCapacity !== undefined ? gte(rooms.maxCapacity, opts.minCapacity) : undefined,
     ...(opts.resources ?? []).map(
       (tag) => sql`exists (select 1 from json_each(${rooms.resources}) where json_each.value = ${tag})`,
     ),

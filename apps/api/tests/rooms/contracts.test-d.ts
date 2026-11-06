@@ -33,7 +33,7 @@ describe('zod input schemas infer the controller request types', () => {
     expectTypeOf<z.output<typeof emptySchema>>().toEqualTypeOf<C['params']>();
     expectTypeOf<z.output<typeof emptySchema>>().toEqualTypeOf<C['query']>();
     // resources may be omitted by clients; the schema defaults it
-    expectTypeOf<z.input<typeof createRoomBodySchema>>().toEqualTypeOf<{ name: string; capacity: number; resources?: string[] }>();
+    expectTypeOf<z.input<typeof createRoomBodySchema>>().toEqualTypeOf<{ name: string; maxCapacity: number; resources?: string[] }>();
   });
 
   it('GET /rooms/list', () => {
