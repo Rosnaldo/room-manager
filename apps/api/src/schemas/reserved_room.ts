@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { isLocalDateTime, minutesBetween } from '../lib/local_datetime';
+import { endsWithinHours, isWeekday, startsWithinHours } from '../lib/business_hours';
 import { idParamsSchema, paginationQuerySchema, paginationSchema } from './common';
 
 export const MIN_RESERVATION_MINUTES = 15;
@@ -16,8 +17,8 @@ export const localDateTimeSchema = z
 // ---- input ----
 
 /**
- * Shape and duration rules. "Not in the past" and "no overlap" need the clock and the database,
- * so the controller checks those.
+ * Shape, duration and business-hours rules (weekdays, 08:00–20:00). "Not in the past" and
+ * "no overlap" need the clock and the database, so the controller checks those.
  */
 export const createReservedRoomBodySchema = z
   .object({
@@ -37,6 +38,17 @@ export const createReservedRoomBodySchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservation must last at least 15 minutes' });
     } else if (minutes > MAX_RESERVATION_MINUTES) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservation must last at most 4 hours' });
+    }
+
+    // SALA-5: only on weekdays, from 08:00 to 20:00
+    if (!isWeekday(body.startAt)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['startAt'], message: 'reservations are only allowed on weekdays (Monday to Friday)' });
+    }
+    if (!startsWithinHours(body.startAt)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['startAt'], message: 'reservations must be between 08:00 and 20:00' });
+    }
+    if (minutes > 0 && !endsWithinHours(body.startAt, body.endAt)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endAt'], message: 'reservations must be between 08:00 and 20:00' });
     }
   });
 

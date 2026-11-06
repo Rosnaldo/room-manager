@@ -8,14 +8,17 @@ import { reserveRoom, type ReserveState } from './actions';
 const field = 'rounded border border-neutral-300 bg-white px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900';
 
 /**
- * 24-hour times every 15 minutes (00:00 … 23:45). A <select> instead of <input type="time">, whose
- * AM/PM display follows the browser locale and makes "12:30 AM" (00:30) easy to pick by mistake.
+ * 24-hour times every 15 minutes within business hours (08:00–20:00). A <select> instead of
+ * <input type="time">, whose AM/PM display follows the browser locale and makes "12:30 AM" (00:30)
+ * easy to pick by mistake.
  */
-const TIMES = Array.from({ length: 24 * 4 }, (_, i) => {
-  const h = String(Math.floor(i / 4)).padStart(2, '0');
+const TIMES = Array.from({ length: 12 * 4 + 1 }, (_, i) => {
+  const h = String(8 + Math.floor(i / 4)).padStart(2, '0');
   const m = String((i % 4) * 15).padStart(2, '0');
   return `${h}:${m}`;
-});
+}); // 08:00 … 20:00
+const START_TIMES = TIMES.slice(0, -1); // up to 19:45
+const END_TIMES = TIMES.slice(1); // from 08:15
 
 export function ReserveForm({
   rooms,
@@ -71,7 +74,7 @@ export function ReserveForm({
             <option value="" disabled>
               --:--
             </option>
-            {TIMES.map((t) => (
+            {START_TIMES.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
@@ -84,7 +87,7 @@ export function ReserveForm({
             <option value="" disabled>
               --:--
             </option>
-            {TIMES.map((t) => (
+            {END_TIMES.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
@@ -93,7 +96,9 @@ export function ReserveForm({
         </label>
       </div>
 
-      <p className="text-xs text-neutral-500">De 15 minutos a 4 horas, sem sobrepor outra reserva da sala.</p>
+      <p className="text-xs text-neutral-500">
+        Dias úteis, das 08:00 às 20:00. De 15 minutos a 4 horas, sem sobrepor outra reserva da sala.
+      </p>
 
       {state.error && (
         <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
